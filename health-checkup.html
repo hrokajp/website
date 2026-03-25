@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>健康診断アドバイザー</title>
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --primary: #2563eb;
+      --primary-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --yellow: #ca8a04;
+      --yellow-light: #fef9c3;
+      --orange: #ea580c;
+      --orange-light: #ffedd5;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+      color: white;
+      padding: 32px 24px 28px;
+      text-align: center;
+    }
+    header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    header p { margin-top: 8px; font-size: 14px; opacity: 0.85; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+
+    /* NOTICE */
+    .notice {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #1d4ed8;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .notice span { font-size: 16px; }
+
+    /* SECTION CARD */
+    .section-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 16px 20px;
+      background: linear-gradient(90deg, #f8fafc, #fff);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-icon { font-size: 22px; }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .section-body { padding: 20px; }
+
+    /* GRID */
+    .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+
+    /* FIELD */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .field-wrap { position: relative; }
+    .field input {
+      width: 100%;
+      padding: 10px 44px 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text);
+      background: #f8fafc;
+      transition: border-color 0.15s, background 0.15s;
+      -moz-appearance: textfield;
+    }
+    .field input::-webkit-outer-spin-button,
+    .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .field-unit {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .field-ref { font-size: 11px; color: #94a3b8; }
+
+    /* SELECT */
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text);
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    .field select:focus { outline: none; border-color: var(--primary); background: #fff; }
+
+    /* RADIO URINE */
+    .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .radio-btn { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .radio-btn input { width: auto; padding: 0; }
+    .radio-btn span { font-size: 14px; }
+
+    /* ANALYZE BUTTON */
+    .btn-analyze {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn-analyze:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37,99,235,0.4); }
+    .btn-analyze:active { transform: translateY(0); }
+
+    /* RESULTS */
+    #results { display: none; }
+
+    /* SCORE CARD */
+    .score-card {
+      border-radius: var(--radius);
+      padding: 28px;
+      text-align: center;
+      margin-bottom: 24px;
+      color: white;
+    }
+    .score-card.great { background: linear-gradient(135deg, #16a34a, #22c55e); }
+    .score-card.good  { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+    .score-card.warn  { background: linear-gradient(135deg, #ca8a04, #fbbf24); }
+    .score-card.bad   { background: linear-gradient(135deg, #dc2626, #f87171); }
+    .score-num { font-size: 64px; font-weight: 900; line-height: 1; }
+    .score-label { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .score-sub { font-size: 14px; opacity: 0.9; margin-top: 6px; }
+
+    /* SUMMARY BARS */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-item {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .summary-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green { background: var(--green); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-orange { background: var(--orange); }
+    .dot-red { background: var(--red); }
+    .summary-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .summary-val { font-size: 13px; color: var(--muted); }
+    .summary-status { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .status-green  { background: var(--green-light);  color: var(--green); }
+    .status-yellow { background: var(--yellow-light); color: var(--yellow); }
+    .status-orange { background: var(--orange-light); color: var(--orange); }
+    .status-red    { background: var(--red-light);    color: var(--red); }
+
+    /* ADVICE CARDS */
+    .advice-section-title {
+      font-size: 17px; font-weight: 800;
+      margin-bottom: 14px; margin-top: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .advice-card {
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      border-left: 4px solid;
+    }
+    .advice-card.green  { background: var(--green-light);  border-color: var(--green); }
+    .advice-card.yellow { background: var(--yellow-light); border-color: var(--yellow); }
+    .advice-card.orange { background: var(--orange-light); border-color: var(--orange); }
+    .advice-card.red    { background: var(--red-light);    border-color: var(--red); }
+    .advice-title { font-size: 14px; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .advice-value { font-size: 13px; margin-bottom: 10px; }
+    .advice-text { font-size: 13px; line-height: 1.7; }
+    .advice-tips { margin-top: 10px; }
+    .advice-tips li { font-size: 13px; line-height: 1.7; margin-left: 18px; }
+
+    /* OVERALL ADVICE */
+    .overall-advice {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 1px solid #bae6fd;
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 24px;
+    }
+    .overall-advice h3 { font-size: 16px; font-weight: 800; color: #0369a1; margin-bottom: 12px; }
+    .overall-advice p { font-size: 14px; line-height: 1.8; color: #0c4a6e; }
+
+    /* PRINT / RESET */
+    .action-btns { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-reset {
+      flex: 1;
+      padding: 13px;
+      background: #f1f5f9;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s;
+    }
+    .btn-reset:hover { background: #e2e8f0; }
+
+    @media (max-width: 600px) {
+      .field-grid { grid-template-columns: 1fr 1fr; }
+      .score-num { font-size: 52px; }
+      .action-btns { flex-direction: column; }
+    }
+    @media print {
+      header { background: #2563eb !important; -webkit-print-color-adjust: exact; }
+      .btn-analyze, .action-btns { display: none; }
+      #results { display: block !important; }
+      .notice { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 健康診断アドバイザー</h1>
+  <p>健康診断の数値を入力するだけで、詳細な分析とアドバイスをお届けします</p>
+</header>
+
+<div class="container">
+
+  <div class="notice">
+    <span>ℹ️</span>
+    <div>このツールは一般的な参考基準値に基づく情報提供のみを目的としています。医療的な診断や治療の代替にはなりません。気になる数値は必ず医師にご相談ください。</div>
+  </div>
+
+  <!-- 基本情報 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">👤</span>
+      <span class="section-title">基本情報</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>性別</label>
+          <div class="field-wrap">
+            <select id="sex">
+              <option value="male">男性</option>
+              <option value="female">女性</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>年齢</label>
+          <div class="field-wrap">
+            <input type="number" id="age" placeholder="例: 48" min="0" max="120">
+            <span class="field-unit">歳</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>身長</label>
+          <div class="field-wrap">
+            <input type="number" id="height" placeholder="例: 170" step="0.1">
+            <span class="field-unit">cm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>体重</label>
+          <div class="field-wrap">
+            <input type="number" id="weight" placeholder="例: 68" step="0.1">
+            <span class="field-unit">kg</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>腹囲</label>
+          <div class="field-wrap">
+            <input type="number" id="waist" placeholder="例: 85" step="0.5">
+            <span class="field-unit">cm</span>
+          </div>
+          <span class="field-ref">基準: 男性85cm未満 / 女性90cm未満</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 血圧 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">💓</span>
+      <span class="section-title">血圧</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>収縮期血圧（上）</label>
+          <div class="field-wrap">
+            <input type="number" id="sbp" placeholder="例: 120">
+            <span class="field-unit">mmHg</span>
+          </div>
+          <span class="field-ref">正常: 120未満</span>
+        </div>
+        <div class="field">
+          <label>拡張期血圧（下）</label>
+          <div class="field-wrap">
+            <input type="number" id="dbp" placeholder="例: 80">
+            <span class="field-unit">mmHg</span>
+          </div>
+          <span class="field-ref">正常: 80未満</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 血糖・HbA1c -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">🩸</span>
+      <span class="section-title">血糖・糖尿病関連</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>空腹時血糖</label>
+          <div class="field-wrap">
+            <input type="number" id="fbg" placeholder="例: 95" step="0.1">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 100未満</span>
+        </div>
+        <div class="field">
+          <label>HbA1c</label>
+          <div class="field-wrap">
+            <input type="number" id="hba1c" placeholder="例: 5.5" step="0.1">
+            <span class="field-unit">%</span>
+          </div>
+          <span class="field-ref">正常: 5.6未満</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 脂質 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">🫀</span>
+      <span class="section-title">脂質（コレステロール・中性脂肪）</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>総コレステロール</label>
+          <div class="field-wrap">
+            <input type="number" id="tcho" placeholder="例: 200">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 200未満</span>
+        </div>
+        <div class="field">
+          <label>LDLコレステロール</label>
+          <div class="field-wrap">
+            <input type="number" id="ldl" placeholder="例: 120">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 120未満</span>
+        </div>
+        <div class="field">
+          <label>HDLコレステロール</label>
+          <div class="field-wrap">
+            <input type="number" id="hdl" placeholder="例: 55">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 40以上</span>
+        </div>
+        <div class="field">
+          <label>中性脂肪（TG）</label>
+          <div class="field-wrap">
+            <input type="number" id="tg" placeholder="例: 120">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 150未満</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 肝機能 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">🫁</span>
+      <span class="section-title">肝機能</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>AST（GOT）</label>
+          <div class="field-wrap">
+            <input type="number" id="ast" placeholder="例: 25">
+            <span class="field-unit">U/L</span>
+          </div>
+          <span class="field-ref">正常: 30以下</span>
+        </div>
+        <div class="field">
+          <label>ALT（GPT）</label>
+          <div class="field-wrap">
+            <input type="number" id="alt" placeholder="例: 20">
+            <span class="field-unit">U/L</span>
+          </div>
+          <span class="field-ref">正常: 30以下</span>
+        </div>
+        <div class="field">
+          <label>γ-GTP</label>
+          <div class="field-wrap">
+            <input type="number" id="ggt" placeholder="例: 30">
+            <span class="field-unit">U/L</span>
+          </div>
+          <span class="field-ref">正常: 男性50以下 / 女性30以下</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 腎機能 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">🫘</span>
+      <span class="section-title">腎機能・尿酸</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>クレアチニン</label>
+          <div class="field-wrap">
+            <input type="number" id="cr" placeholder="例: 0.85" step="0.01">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 男性1.0以下 / 女性0.7以下</span>
+        </div>
+        <div class="field">
+          <label>eGFR</label>
+          <div class="field-wrap">
+            <input type="number" id="egfr" placeholder="例: 80" step="0.1">
+            <span class="field-unit">mL/分</span>
+          </div>
+          <span class="field-ref">正常: 60以上</span>
+        </div>
+        <div class="field">
+          <label>尿酸（UA）</label>
+          <div class="field-wrap">
+            <input type="number" id="ua" placeholder="例: 5.5" step="0.1">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 男性7.0以下 / 女性6.0以下</span>
+        </div>
+        <div class="field">
+          <label>BUN（尿素窒素）</label>
+          <div class="field-wrap">
+            <input type="number" id="bun" placeholder="例: 15" step="0.1">
+            <span class="field-unit">mg/dL</span>
+          </div>
+          <span class="field-ref">正常: 8〜20</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 血液一般 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">🔬</span>
+      <span class="section-title">血液一般検査（CBC）</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>ヘモグロビン（Hb）</label>
+          <div class="field-wrap">
+            <input type="number" id="hb" placeholder="例: 14.0" step="0.1">
+            <span class="field-unit">g/dL</span>
+          </div>
+          <span class="field-ref">正常: 男性13〜17 / 女性12〜16</span>
+        </div>
+        <div class="field">
+          <label>赤血球数（RBC）</label>
+          <div class="field-wrap">
+            <input type="number" id="rbc" placeholder="例: 470" step="1">
+            <span class="field-unit">万/μL</span>
+          </div>
+          <span class="field-ref">正常: 男性400〜550 / 女性380〜500</span>
+        </div>
+        <div class="field">
+          <label>白血球数（WBC）</label>
+          <div class="field-wrap">
+            <input type="number" id="wbc" placeholder="例: 6000" step="100">
+            <span class="field-unit">/μL</span>
+          </div>
+          <span class="field-ref">正常: 3500〜9000</span>
+        </div>
+        <div class="field">
+          <label>血小板数（PLT）</label>
+          <div class="field-wrap">
+            <input type="number" id="plt" placeholder="例: 22" step="0.1">
+            <span class="field-unit">万/μL</span>
+          </div>
+          <span class="field-ref">正常: 15〜35</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 尿検査 -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-icon">🧪</span>
+      <span class="section-title">尿検査</span>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field">
+          <label>尿糖</label>
+          <div class="radio-group">
+            <label class="radio-btn"><input type="radio" name="urine_glu" value="neg" checked> <span>陰性（−）</span></label>
+            <label class="radio-btn"><input type="radio" name="urine_glu" value="pos"> <span>陽性（＋）</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>尿蛋白</label>
+          <div class="radio-group">
+            <label class="radio-btn"><input type="radio" name="urine_pro" value="neg" checked> <span>陰性（−）</span></label>
+            <label class="radio-btn"><input type="radio" name="urine_pro" value="pos"> <span>陽性（＋）</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>尿潜血</label>
+          <div class="radio-group">
+            <label class="radio-btn"><input type="radio" name="urine_bld" value="neg" checked> <span>陰性（−）</span></label>
+            <label class="radio-btn"><input type="radio" name="urine_bld" value="pos"> <span>陽性（＋）</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-analyze" onclick="analyze()">🔍 健康診断を分析する</button>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <div id="scoreCard" class="score-card">
+      <div id="scoreNum" class="score-num">--</div>
+      <div id="scoreLabel" class="score-label">--</div>
+      <div id="scoreSub" class="score-sub">--</div>
+    </div>
+
+    <div id="summaryGrid" class="summary-grid"></div>
+
+    <div id="overallAdvice" class="overall-advice" style="display:none">
+      <h3>🌟 総合アドバイス</h3>
+      <p id="overallAdviceText"></p>
+    </div>
+
+    <div class="advice-section-title">📋 項目別 詳細アドバイス</div>
+    <div id="adviceCards"></div>
+
+    <div class="action-btns">
+      <button class="btn-reset" onclick="resetForm()">🔄 入力をリセットして再入力</button>
+      <button class="btn-reset" onclick="window.print()" style="background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8">🖨️ 印刷する</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ==============================
+  // 評価ロジック
+  // ==============================
+  function val(id) {
+    const v = parseFloat(document.getElementById(id)?.value);
+    return isNaN(v) ? null : v;
+  }
+  function radioVal(name) {
+    return document.querySelector(`input[name="${name}"]:checked`)?.value || 'neg';
+  }
+  function sex() { return document.getElementById('sex').value; }
+
+  function bmi(h, w) {
+    if (!h || !w) return null;
+    return w / ((h / 100) ** 2);
+  }
+
+  // status: 'green'|'yellow'|'orange'|'red'
+  function classify(val, ranges) {
+    // ranges: [{max, status, label}] sorted from strictest
+    if (val === null) return null;
+    for (const r of ranges) {
+      if (r.min !== undefined && r.max !== undefined) {
+        if (val >= r.min && val <= r.max) return { status: r.status, label: r.label };
+      } else if (r.min !== undefined) {
+        if (val >= r.min) return { status: r.status, label: r.label };
+      } else {
+        if (val <= r.max) return { status: r.status, label: r.label };
+      }
+    }
+    return { status: 'red', label: '要検討' };
+  }
+
+  // ==============================
+  // アドバイスデータ
+  // ==============================
+  const ADVICE = {
+    bmi: {
+      name: 'BMI',
+      advice: {
+        green: {
+          title: '✅ BMI 正常範囲',
+          tips: ['現在の食生活・運動習慣を維持しましょう。', '極端なダイエットは必要ありません。バランスの良い食事を心がけてください。']
+        },
+        yellow: {
+          title: '⚠️ BMI やや高め（過体重）',
+          tips: ['1日の摂取カロリーを少しずつ減らし、食事記録をつけてみましょう。', '炭水化物（特に精製糖質）を適度に減らし、野菜・たんぱく質を増やすと効果的です。', 'ウォーキング30分/日を目標に始めましょう。']
+        },
+        orange: {
+          title: '🔶 BMI 肥満度1（要注意）',
+          tips: ['生活習慣病（糖尿病・高血圧・脂質異常症）のリスクが高まります。', '食事管理と有酸素運動（ウォーキング・自転車など）を組み合わせましょう。', '管理栄養士の栄養指導を受けることをお勧めします。']
+        },
+        red: {
+          title: '🚨 BMI 肥満度2以上（要医療相談）',
+          tips: ['早期に医師・管理栄養士へ相談することを強くお勧めします。', '急激な減量は危険です。医師の指導のもとで行いましょう。', '肥満外来の利用も検討してください。']
+        }
+      }
+    },
+    waist: {
+      name: '腹囲',
+      advice: {
+        green: { title: '✅ 腹囲 正常', tips: ['内臓脂肪型肥満のリスクは低い状態です。現在の生活習慣を維持しましょう。'] },
+        red: {
+          title: '🚨 腹囲 基準超過（内臓脂肪型肥満の疑い）',
+          tips: [
+            '内臓脂肪が蓄積しているサインです。メタボリックシンドロームに注意が必要です。',
+            '食事は腹8分目を意識し、特に夜の糖質・脂質を控えましょう。',
+            '食後のウォーキング（10〜15分）が内臓脂肪の燃焼に効果的です。',
+            'お酒（特にビール・日本酒）は腹囲に影響しやすいため、量を見直しましょう。'
+          ]
+        }
+      }
+    },
+    bp: {
+      name: '血圧',
+      advice: {
+        green: { title: '✅ 血圧 正常', tips: ['塩分過多・過度の飲酒・喫煙を避けて現状を維持しましょう。'] },
+        yellow: {
+          title: '⚠️ 血圧 やや高め（正常高値）',
+          tips: [
+            '1日の塩分摂取量を6g未満（できれば3〜5g）に抑えましょう。',
+            '麺類のスープ・漬物・加工食品・外食は塩分が多いため注意が必要です。',
+            'カリウムを多く含む野菜・果物（バナナ・ほうれん草・アボカドなど）を積極的に摂りましょう。',
+            'ストレス管理と十分な睡眠も血圧管理に重要です。'
+          ]
+        },
+        orange: {
+          title: '🔶 血圧 高め（高血圧1度）',
+          tips: [
+            '医師への相談を検討してください。自己判断での放置は禁物です。',
+            'DASH食（野菜・果物・低脂肪乳製品・魚を中心とした食事）が効果的です。',
+            '有酸素運動（ウォーキング・水泳）を週5日・30分程度行いましょう。',
+            '喫煙している場合は禁煙が最も効果的な対策の一つです。',
+            '飲酒は日本酒1合/日（エタノール20g）以下に制限しましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 血圧 高い（高血圧2度以上）',
+          tips: [
+            '速やかに医師の診察を受けてください。脳卒中・心筋梗塞のリスクが高い状態です。',
+            '医師の指示に従い、必要であれば降圧剤による治療を開始してください。',
+            '自己判断での断薬は絶対に行わないでください。'
+          ]
+        }
+      }
+    },
+    fbg: {
+      name: '空腹時血糖',
+      advice: {
+        green: { title: '✅ 空腹時血糖 正常', tips: ['糖質の過剰摂取に注意し、現状を維持しましょう。'] },
+        yellow: {
+          title: '⚠️ 空腹時血糖 境界域（前糖尿病）',
+          tips: [
+            '「前糖尿病」の状態です。今のうちに生活習慣を改善しましょう。',
+            '精製糖質（白米・白パン・砂糖）を減らし、全粒穀物・雑穀米・野菜を増やしましょう。',
+            '食事の順序を「野菜→たんぱく質→炭水化物」の順にすることで血糖値の急上昇を防げます。',
+            '間食（特に甘いもの・ジュース）を控えましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 空腹時血糖 高値（糖尿病疑い）',
+          tips: [
+            '糖尿病の診断基準に近い、または超えています。医師の診察を受けてください。',
+            '医師の指導のもとで食事療法・運動療法を行いましょう。',
+            'HbA1cと合わせて経過観察が必要です。'
+          ]
+        }
+      }
+    },
+    hba1c: {
+      name: 'HbA1c',
+      advice: {
+        green: { title: '✅ HbA1c 正常', tips: ['過去1〜2ヶ月の平均血糖値が良好です。現在の食生活を維持しましょう。'] },
+        yellow: {
+          title: '⚠️ HbA1c 境界域',
+          tips: [
+            '過去2ヶ月間の平均血糖値がやや高い傾向にあります。',
+            '甘い飲み物（ジュース・缶コーヒー・スポーツドリンク）を水・お茶に変えましょう。',
+            '糖質の少ない食品（豆腐・魚・肉・野菜）を積極的に摂りましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 HbA1c 高値（糖尿病管理要確認）',
+          tips: [
+            '糖尿病または糖尿病予備群の可能性があります。医師の診察を早急に受けてください。',
+            '薬物療法が必要な場合があります。医師の指示に従いましょう。',
+            'HbA1c 7.0%以下を維持することが合併症予防の目標です。'
+          ]
+        }
+      }
+    },
+    ldl: {
+      name: 'LDLコレステロール',
+      advice: {
+        green: { title: '✅ LDL 正常', tips: ['悪玉コレステロールが基準内です。飽和脂肪酸（バター・ラード・霜降り肉）を摂り過ぎないよう注意しましょう。'] },
+        yellow: {
+          title: '⚠️ LDL やや高め（境界域高LDL血症）',
+          tips: [
+            '飽和脂肪酸（肉の脂身・バター・生クリーム）を減らし、不飽和脂肪酸（青魚・オリーブ油・アボカド）を増やしましょう。',
+            '食物繊維（野菜・豆類・きのこ・海藻）を毎食意識して摂りましょう。コレステロールの吸収を抑えます。',
+            '卵は1日1個程度を目安にしましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 LDL 高値（高LDL血症）',
+          tips: [
+            '動脈硬化・心筋梗塞・脳卒中のリスクが上昇します。医師への相談を推奨します。',
+            '特に糖尿病・高血圧・喫煙がある場合は早期治療（スタチン系薬）が推奨されます。',
+            'トランス脂肪酸（マーガリン・ショートニングを含む加工食品）を避けましょう。',
+            '青魚（サバ・イワシ・サンマ）を週2〜3回摂るとEPA/DHAの効果でLDLを下げやすくなります。'
+          ]
+        }
+      }
+    },
+    hdl: {
+      name: 'HDLコレステロール',
+      advice: {
+        green: { title: '✅ HDL 正常（善玉コレステロール良好）', tips: ['善玉コレステロールが十分あります。有酸素運動を継続しましょう。'] },
+        yellow: {
+          title: '⚠️ HDL やや低め',
+          tips: [
+            'HDLを上げるには有酸素運動が最も効果的です（ウォーキング・ジョギング・水泳）。',
+            '禁煙によりHDLが増加します。喫煙している場合はぜひ禁煙を。',
+            'オリーブ油・ナッツ類・アボカドの不飽和脂肪酸がHDLを増やします。',
+            'トランス脂肪酸はHDLを下げるため、マーガリンや揚げ物の多い食事を控えましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 HDL 低値（低HDL血症）',
+          tips: [
+            'HDLが低い状態は心血管疾患リスクを高めます。医師へ相談してください。',
+            '週3〜5日の有酸素運動（30分以上）が最も効果的な改善策です。',
+            '飲酒は適量（エタノール20g/日以下）ならHDLをわずかに上げますが、過度の飲酒は逆効果です。'
+          ]
+        }
+      }
+    },
+    tg: {
+      name: '中性脂肪（TG）',
+      advice: {
+        green: { title: '✅ 中性脂肪 正常', tips: ['アルコールや糖質の過剰摂取に注意して現状を維持しましょう。'] },
+        yellow: {
+          title: '⚠️ 中性脂肪 やや高め（境界域）',
+          tips: [
+            '中性脂肪は「糖質」と「アルコール」に最も影響されます。',
+            '白米・麺類・パン・砂糖入り飲料を減らしましょう。',
+            '果物の摂りすぎ（果糖）も中性脂肪を上げる原因になります。',
+            '青魚のω-3脂肪酸（EPA/DHA）は中性脂肪を下げる効果があります。'
+          ]
+        },
+        red: {
+          title: '🚨 中性脂肪 高値（高中性脂肪血症）',
+          tips: [
+            '動脈硬化・急性膵炎のリスクがあります。医師への相談を推奨します。',
+            'アルコールを控えるか、できれば禁酒しましょう。特に日本酒・ビールは要注意。',
+            '糖質を大幅に制限し、たんぱく質・食物繊維を増やした食事にしましょう。',
+            '魚油サプリ（EPA/DHA製剤）の服用も医師に相談してみてください。'
+          ]
+        }
+      }
+    },
+    ast: {
+      name: 'AST（GOT）',
+      advice: {
+        green: { title: '✅ AST 正常', tips: ['肝細胞のダメージは正常範囲です。飲酒・過食を避けて維持しましょう。'] },
+        yellow: {
+          title: '⚠️ AST やや高め',
+          tips: [
+            '肝臓や筋肉への負担がやや増しています。飲酒量を見直しましょう。',
+            '激しい運動後も一時的に上昇することがあります。',
+            '脂肪肝の可能性もありますので、ALT・γ-GTPとの関係も確認しましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 AST 高値',
+          tips: [
+            '肝機能障害が疑われます。医師の診察を受けてください。',
+            '原因として脂肪肝・アルコール性肝炎・ウイルス性肝炎などが考えられます。',
+            'アルコールを直ちに控え、高脂肪食・過食を避けましょう。'
+          ]
+        }
+      }
+    },
+    alt: {
+      name: 'ALT（GPT）',
+      advice: {
+        green: { title: '✅ ALT 正常', tips: ['肝臓のダメージは正常範囲内です。'] },
+        yellow: {
+          title: '⚠️ ALT やや高め',
+          tips: [
+            'ALTは肝臓特異的な指標です。脂肪肝・アルコールの影響が出やすい値です。',
+            '体重の5〜10%を減量するだけでALTが改善することが多いです。',
+            '飲酒を控え、揚げ物・甘いものを減らした食生活を心がけましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 ALT 高値（肝障害の可能性）',
+          tips: [
+            '肝臓になんらかの問題が生じている可能性があります。医師の診察を受けてください。',
+            '追加検査（腹部エコー・ウイルス性肝炎検査）が必要な場合があります。',
+            '薬剤（市販薬・サプリ含む）が原因の場合もあります。服用中の薬を医師に伝えましょう。'
+          ]
+        }
+      }
+    },
+    ggt: {
+      name: 'γ-GTP',
+      advice: {
+        green: { title: '✅ γ-GTP 正常', tips: ['胆道系の状態は良好です。'] },
+        yellow: {
+          title: '⚠️ γ-GTP やや高め',
+          tips: [
+            'γ-GTPはアルコールに対して非常に敏感な指標です。飲酒量を減らしましょう。',
+            '胆道系（胆囊・胆管）の異常でも上昇します。他の肝機能値とあわせて確認しましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 γ-GTP 高値',
+          tips: [
+            'アルコール多飲・脂肪肝・胆道疾患が疑われます。医師へ相談してください。',
+            '禁酒を実施するとγ-GTPは比較的早く改善します（数週間で改善する場合も）。'
+          ]
+        }
+      }
+    },
+    egfr: {
+      name: 'eGFR（腎機能）',
+      advice: {
+        green: { title: '✅ eGFR 正常（腎機能良好）', tips: ['水分を十分に摂り、腎臓への負担を避けましょう。'] },
+        yellow: {
+          title: '⚠️ eGFR やや低め（軽度腎機能低下）',
+          tips: [
+            'CKD（慢性腎臓病）G2〜G3aの段階である可能性があります。',
+            '塩分・たんぱく質・カリウムの過剰摂取を控えましょう。',
+            '水分を意識的に摂り（1日1.5〜2L）、脱水を防ぎましょう。',
+            'NSAIDs（イブプロフェン等の市販鎮痛剤）の服用は医師に相談のうえ行いましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 eGFR 低値（腎機能低下）',
+          tips: [
+            'CKDが進行している可能性があります。腎臓内科の受診を強くお勧めします。',
+            'たんぱく質制限（医師の指導のもと）・塩分制限・カリウム制限が必要な場合があります。',
+            '定期的な腎機能チェック・血圧管理が重要です。'
+          ]
+        }
+      }
+    },
+    ua: {
+      name: '尿酸（UA）',
+      advice: {
+        green: { title: '✅ 尿酸 正常', tips: ['痛風・腎尿路結石のリスクは低い状態です。'] },
+        yellow: {
+          title: '⚠️ 尿酸 高め（高尿酸血症）',
+          tips: [
+            '痛風発作・尿路結石のリスクが上昇します。',
+            'プリン体の多い食品（レバー・白子・干物・エビ・貝類・ビール）を控えましょう。',
+            '水分を1日2L以上摂ることで尿酸の排出を促せます。',
+            'アルコール全般（特にビール・日本酒）は尿酸を上げますので摂取量を減らしましょう。',
+            '果糖（果物の摂りすぎ・清涼飲料水）も尿酸を上げます。'
+          ]
+        },
+        red: {
+          title: '🚨 尿酸 非常に高値（治療要検討）',
+          tips: [
+            '9.0mg/dL以上では痛風発作・腎障害のリスクが高く、薬物療法（尿酸降下薬）を医師と検討してください。',
+            '痛風発作が起きたら自己判断で動かさず、医師の診察を受けましょう。'
+          ]
+        }
+      }
+    },
+    hb: {
+      name: 'ヘモグロビン',
+      advice: {
+        green: { title: '✅ ヘモグロビン 正常', tips: ['貧血なしです。鉄分・葉酸・ビタミンB12を含むバランスの良い食事を続けましょう。'] },
+        yellow: {
+          title: '⚠️ ヘモグロビン やや低め（軽度貧血傾向）',
+          tips: [
+            '鉄分・葉酸・ビタミンB12不足の可能性があります。',
+            '鉄分：レバー・赤身肉・牡蠣・小松菜・ほうれん草を摂りましょう。',
+            'ビタミンC（野菜・果物）と一緒に摂ると鉄の吸収率がUPします。',
+            'お茶・コーヒーは非ヘム鉄の吸収を阻害するため、食事中の摂取は避けましょう。'
+          ]
+        },
+        red: {
+          title: '🚨 ヘモグロビン 低値（貧血）',
+          tips: [
+            '倦怠感・動悸・息切れの原因になります。医師の診察を受けましょう。',
+            '鉄欠乏性貧血か、他の原因（腎性貧血・消化管出血など）かを医師に確認してもらいましょう。',
+            '自己判断での鉄サプリ服用は原因が違う場合に遅れる可能性があるため、まず受診を。'
+          ]
+        }
+      }
+    }
+  };
+
+  // ==============================
+  // メイン分析
+  // ==============================
+  function analyze() {
+    const s = sex();
+    const age = val('age');
+    const h = val('height');
+    const w = val('weight');
+    const waistV = val('waist');
+    const sbp = val('sbp');
+    const dbp = val('dbp');
+    const fbg = val('fbg');
+    const hba1c = val('hba1c');
+    const tcho = val('tcho');
+    const ldl = val('ldl');
+    const hdl = val('hdl');
+    const tg = val('tg');
+    const ast = val('ast');
+    const alt = val('alt');
+    const ggt = val('ggt');
+    const cr = val('cr');
+    const egfr = val('egfr');
+    const ua = val('ua');
+    const bun = val('bun');
+    const hb = val('hb');
+    const rbc = val('rbc');
+    const wbc = val('wbc');
+    const plt = val('plt');
+    const urineGlu = radioVal('urine_glu');
+    const uninePro = radioVal('urine_pro');
+    const urineBld = radioVal('urine_bld');
+
+    const bmiV = bmi(h, w);
+
+    const items = [];
+
+    // BMI
+    if (bmiV !== null) {
+      let bmiStatus;
+      if (bmiV < 18.5) bmiStatus = { status: 'yellow', label: '低体重' };
+      else if (bmiV < 25) bmiStatus = { status: 'green', label: '正常' };
+      else if (bmiV < 30) bmiStatus = { status: 'yellow', label: '過体重' };
+      else if (bmiV < 35) bmiStatus = { status: 'orange', label: '肥満(1度)' };
+      else bmiStatus = { status: 'red', label: '肥満(2度以上)' };
+      const advKey = bmiV < 18.5 ? 'yellow' : bmiStatus.status;
+      items.push({
+        name: 'BMI', value: bmiV.toFixed(1), unit: '',
+        status: bmiStatus.status, statusLabel: bmiStatus.label,
+        advice: ADVICE.bmi.advice[advKey] || ADVICE.bmi.advice.yellow,
+        extra: bmiV < 18.5 ? {
+          title: '⚠️ BMI 低体重（痩せ）',
+          tips: ['エネルギー・たんぱく質・ビタミン・ミネラルが不足している可能性があります。', '1日3食しっかり食べ、特に朝食と夕食のたんぱく質（肉・魚・卵・大豆製品）を増やしましょう。', '急激な体重増加は体に負担となります。ゆっくりと増やしましょう（月0.5〜1kg目安）。']
+        } : null
+      });
+    }
+
+    // 腹囲
+    if (waistV !== null) {
+      const waistLimit = s === 'male' ? 85 : 90;
+      const waistOk = waistV < waistLimit;
+      items.push({
+        name: '腹囲', value: waistV, unit: 'cm',
+        status: waistOk ? 'green' : 'red',
+        statusLabel: waistOk ? '正常' : '基準超過',
+        advice: waistOk ? ADVICE.waist.advice.green : ADVICE.waist.advice.red
+      });
+    }
+
+    // 血圧
+    if (sbp !== null && dbp !== null) {
+      let bpStatus, bpLabel;
+      if (sbp < 120 && dbp < 80) { bpStatus = 'green'; bpLabel = '正常血圧'; }
+      else if (sbp < 130 && dbp < 80) { bpStatus = 'yellow'; bpLabel = '正常高値'; }
+      else if (sbp < 140 && dbp < 90) { bpStatus = 'yellow'; bpLabel = '高値血圧'; }
+      else if (sbp < 160 && dbp < 100) { bpStatus = 'orange'; bpLabel = '高血圧1度'; }
+      else { bpStatus = 'red'; bpLabel = '高血圧2度以上'; }
+      const advKey = bpStatus === 'yellow' ? 'yellow' : bpStatus;
+      items.push({
+        name: '血圧', value: `${sbp}/${dbp}`, unit: 'mmHg',
+        status: bpStatus, statusLabel: bpLabel,
+        advice: ADVICE.bp.advice[advKey] || ADVICE.bp.advice.yellow
+      });
+    } else if (sbp !== null || dbp !== null) {
+      // partial
+    }
+
+    // 空腹時血糖
+    if (fbg !== null) {
+      let status, label;
+      if (fbg < 100) { status = 'green'; label = '正常'; }
+      else if (fbg < 126) { status = 'yellow'; label = '境界域'; }
+      else { status = 'red'; label = '要確認'; }
+      items.push({
+        name: '空腹時血糖', value: fbg, unit: 'mg/dL',
+        status, statusLabel: label,
+        advice: ADVICE.fbg.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // HbA1c
+    if (hba1c !== null) {
+      let status, label;
+      if (hba1c < 5.6) { status = 'green'; label = '正常'; }
+      else if (hba1c < 6.5) { status = 'yellow'; label = '境界域'; }
+      else { status = 'red'; label = '要確認'; }
+      items.push({
+        name: 'HbA1c', value: hba1c.toFixed(1), unit: '%',
+        status, statusLabel: label,
+        advice: ADVICE.hba1c.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // LDL
+    if (ldl !== null) {
+      let status, label;
+      if (ldl < 120) { status = 'green'; label = '正常'; }
+      else if (ldl < 140) { status = 'yellow'; label = '境界域'; }
+      else if (ldl < 180) { status = 'orange'; label = '高め'; }
+      else { status = 'red'; label = '高値'; }
+      const advKey = status === 'orange' ? 'red' : status;
+      items.push({
+        name: 'LDLコレステロール', value: ldl, unit: 'mg/dL',
+        status, statusLabel: label,
+        advice: ADVICE.ldl.advice[advKey] || ADVICE.ldl.advice.yellow
+      });
+    }
+
+    // HDL
+    if (hdl !== null) {
+      let status, label;
+      if (hdl >= 60) { status = 'green'; label = '理想的'; }
+      else if (hdl >= 40) { status = 'green'; label = '正常'; }
+      else if (hdl >= 35) { status = 'yellow'; label: 'やや低め'; status = 'yellow'; label = 'やや低め'; }
+      else { status = 'red'; label = '低値'; }
+      const advKey = status === 'yellow' ? 'yellow' : status;
+      items.push({
+        name: 'HDLコレステロール', value: hdl, unit: 'mg/dL',
+        status, statusLabel: label,
+        advice: ADVICE.hdl.advice[advKey] || ADVICE.hdl.advice.green
+      });
+    }
+
+    // TG
+    if (tg !== null) {
+      let status, label;
+      if (tg < 150) { status = 'green'; label = '正常'; }
+      else if (tg < 300) { status = 'yellow'; label = '境界域'; }
+      else { status = 'red'; label = '高値'; }
+      items.push({
+        name: '中性脂肪', value: tg, unit: 'mg/dL',
+        status, statusLabel: label,
+        advice: ADVICE.tg.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // AST
+    if (ast !== null) {
+      let status, label;
+      if (ast <= 30) { status = 'green'; label = '正常'; }
+      else if (ast <= 50) { status = 'yellow'; label = 'やや高め'; }
+      else { status = 'red'; label = '高値'; }
+      items.push({
+        name: 'AST（GOT）', value: ast, unit: 'U/L',
+        status, statusLabel: label,
+        advice: ADVICE.ast.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // ALT
+    if (alt !== null) {
+      let status, label;
+      if (alt <= 30) { status = 'green'; label = '正常'; }
+      else if (alt <= 50) { status = 'yellow'; label = 'やや高め'; }
+      else { status = 'red'; label = '高値'; }
+      items.push({
+        name: 'ALT（GPT）', value: alt, unit: 'U/L',
+        status, statusLabel: label,
+        advice: ADVICE.alt.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // GGT
+    if (ggt !== null) {
+      const ggtLimit = s === 'male' ? 50 : 30;
+      let status, label;
+      if (ggt <= ggtLimit) { status = 'green'; label = '正常'; }
+      else if (ggt <= ggtLimit * 2) { status = 'yellow'; label = 'やや高め'; }
+      else { status = 'red'; label = '高値'; }
+      items.push({
+        name: 'γ-GTP', value: ggt, unit: 'U/L',
+        status, statusLabel: label,
+        advice: ADVICE.ggt.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // eGFR
+    if (egfr !== null) {
+      let status, label;
+      if (egfr >= 90) { status = 'green'; label = '正常'; }
+      else if (egfr >= 60) { status = 'green'; label = '軽度低下'; }
+      else if (egfr >= 45) { status = 'yellow'; label = '中等度低下'; }
+      else if (egfr >= 30) { status = 'orange'; label = '高度低下'; }
+      else { status = 'red'; label = '末期腎不全に近い'; }
+      const advKey = (status === 'green' && egfr < 90) ? 'green' : status === 'orange' ? 'red' : status;
+      items.push({
+        name: 'eGFR', value: egfr, unit: 'mL/分',
+        status, statusLabel: label,
+        advice: ADVICE.egfr.advice[advKey] || ADVICE.egfr.advice.green
+      });
+    }
+
+    // 尿酸
+    if (ua !== null) {
+      const uaLimit = s === 'male' ? 7.0 : 6.0;
+      let status, label;
+      if (ua <= uaLimit) { status = 'green'; label = '正常'; }
+      else if (ua <= 9.0) { status = 'yellow'; label = '高め（高尿酸血症）'; }
+      else { status = 'red'; label = '非常に高値'; }
+      items.push({
+        name: '尿酸', value: ua.toFixed(1), unit: 'mg/dL',
+        status, statusLabel: label,
+        advice: ADVICE.ua.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // Hb
+    if (hb !== null) {
+      const hbLow = s === 'male' ? 13.0 : 12.0;
+      const hbHigh = s === 'male' ? 17.0 : 16.0;
+      let status, label;
+      if (hb < hbLow - 2) { status = 'red'; label = '低値（貧血）'; }
+      else if (hb < hbLow) { status = 'yellow'; label = 'やや低め'; }
+      else if (hb <= hbHigh) { status = 'green'; label = '正常'; }
+      else { status = 'yellow'; label = 'やや高め'; }
+      items.push({
+        name: 'ヘモグロビン', value: hb.toFixed(1), unit: 'g/dL',
+        status, statusLabel: label,
+        advice: ADVICE.hb.advice[status === 'yellow' ? 'yellow' : status]
+      });
+    }
+
+    // WBC
+    if (wbc !== null) {
+      let status, label;
+      if (wbc < 3500) { status = 'yellow'; label = '低値（白血球減少）'; }
+      else if (wbc <= 9000) { status = 'green'; label = '正常'; }
+      else if (wbc <= 12000) { status = 'yellow'; label = 'やや高め'; }
+      else { status = 'red'; label = '高値（要確認）'; }
+      const advice = status === 'green'
+        ? { title: '✅ 白血球数 正常', tips: ['免疫機能は正常範囲です。'] }
+        : status === 'yellow' && wbc < 3500
+          ? { title: '⚠️ 白血球数 低値', tips: ['感染症への抵抗力が低下している可能性があります。医師に相談しましょう。'] }
+          : status === 'yellow'
+            ? { title: '⚠️ 白血球数 やや高め', tips: ['感染・炎症の可能性があります。他の症状と合わせて医師に相談しましょう。'] }
+            : { title: '🚨 白血球数 高値', tips: ['感染症・炎症・血液疾患の可能性があります。医師の診察を受けましょう。'] };
+      items.push({ name: '白血球数', value: wbc, unit: '/μL', status, statusLabel: label, advice });
+    }
+
+    // PLT
+    if (plt !== null) {
+      let status, label;
+      if (plt < 10) { status = 'red'; label = '低値（血小板減少症）'; }
+      else if (plt < 15) { status = 'yellow'; label: 'やや低め'; status = 'yellow'; label = 'やや低め'; }
+      else if (plt <= 35) { status = 'green'; label = '正常'; }
+      else if (plt <= 50) { status = 'yellow'; label = 'やや高め'; }
+      else { status = 'red'; label = '高値'; }
+      const advice = status === 'green'
+        ? { title: '✅ 血小板数 正常', tips: ['出血が止まりにくいなどの症状はありません。'] }
+        : { title: status === 'red' && plt < 15 ? '🚨 血小板数 低値' : '⚠️ 血小板数 異常', tips: ['医師への相談をお勧めします。血小板の異常は出血傾向や血液疾患と関連することがあります。'] };
+      items.push({ name: '血小板数', value: plt, unit: '万/μL', status, statusLabel: label, advice });
+    }
+
+    // 尿糖
+    if (urineGlu === 'pos') {
+      items.push({
+        name: '尿糖', value: '陽性（＋）', unit: '',
+        status: 'red', statusLabel: '陽性',
+        advice: {
+          title: '🚨 尿糖 陽性',
+          tips: [
+            '尿に糖が出ている状態です。糖尿病または腎性糖尿（腎臓の閾値の問題）の可能性があります。',
+            '空腹時血糖・HbA1cと合わせて医師に確認してもらいましょう。',
+            '自己判断せず、必ず医師の診察を受けてください。'
+          ]
+        }
+      });
+    }
+
+    // 尿蛋白
+    if (uninePro === 'pos') {
+      items.push({
+        name: '尿蛋白', value: '陽性（＋）', unit: '',
+        status: 'orange', statusLabel: '陽性',
+        advice: {
+          title: '🔶 尿蛋白 陽性',
+          tips: [
+            '腎臓から蛋白が漏れている状態です。腎臓病・糖尿病性腎症・高血圧性腎障害などが考えられます。',
+            '一時的な場合（激しい運動後・発熱後）もありますが、医師に確認しましょう。',
+            '再検査（早朝尿での確認）が必要なことがあります。'
+          ]
+        }
+      });
+    }
+
+    // 尿潜血
+    if (urineBld === 'pos') {
+      items.push({
+        name: '尿潜血', value: '陽性（＋）', unit: '',
+        status: 'orange', statusLabel: '陽性',
+        advice: {
+          title: '🔶 尿潜血 陽性',
+          tips: [
+            '女性の場合は生理の影響で陽性になることがあります。',
+            '男性や繰り返し陽性の場合は膀胱炎・尿路結石・腎臓疾患・泌尿器腫瘍の精査が必要です。',
+            '泌尿器科または内科を受診しましょう。'
+          ]
+        }
+      });
+    }
+
+    // スコア計算
+    let scorePoints = 0;
+    let scoreTotal = 0;
+    const statusWeights = { green: 3, yellow: 2, orange: 1, red: 0 };
+    items.forEach(i => {
+      scorePoints += statusWeights[i.status] || 0;
+      scoreTotal += 3;
+    });
+
+    let score, scoreLabel, scoreCls, scoreSub;
+    if (items.length === 0) {
+      alert('少なくとも1つの項目を入力してください。');
+      return;
+    }
+    const pct = scoreTotal > 0 ? Math.round((scorePoints / scoreTotal) * 100) : 100;
+    score = pct;
+
+    if (pct >= 90) {
+      scoreLabel = '非常に良好'; scoreCls = 'great';
+      scoreSub = 'すべての数値が基準内です。この生活習慣を続けましょう！';
+    } else if (pct >= 70) {
+      scoreLabel = '概ね良好'; scoreCls = 'good';
+      scoreSub = '一部の数値に注意が必要ですが、全体的には良好です。';
+    } else if (pct >= 50) {
+      scoreLabel = '要注意'; scoreCls = 'warn';
+      scoreSub = '複数の項目で改善が必要です。生活習慣を見直しましょう。';
+    } else {
+      scoreLabel = '要改善'; scoreCls = 'bad';
+      scoreSub = '多くの項目で基準値を外れています。医師への相談を強くお勧めします。';
+    }
+
+    // 全体アドバイス
+    const abnormals = items.filter(i => i.status !== 'green');
+    let overallText = '';
+    if (abnormals.length === 0) {
+      overallText = 'すべての検査項目が基準値内で、非常に良好な状態です。現在の食生活・運動習慣・睡眠管理を維持することが大切です。年1回の定期的な健康診断を続けましょう。';
+    } else {
+      const redItems = items.filter(i => i.status === 'red' || i.status === 'orange').map(i => i.name);
+      const yellowItems = items.filter(i => i.status === 'yellow').map(i => i.name);
+      const parts = [];
+      if (redItems.length > 0) parts.push(`特に【${redItems.join('・')}】は要注意で、医師への相談をお勧めします。`);
+      if (yellowItems.length > 0) parts.push(`【${yellowItems.join('・')}】はやや気になる水準で、食事・運動習慣の改善が効果的です。`);
+      parts.push('下記の項目別アドバイスを参考に、無理なく続けられる生活習慣の改善から始めましょう。栄養バランスの良い食事・適度な運動・十分な睡眠が健康の基本です。');
+      overallText = parts.join(' ');
+    }
+
+    // --- 描画 ---
+    const scoreCard = document.getElementById('scoreCard');
+    scoreCard.className = `score-card ${scoreCls}`;
+    document.getElementById('scoreNum').textContent = score;
+    document.getElementById('scoreLabel').textContent = scoreLabel;
+    document.getElementById('scoreSub').textContent = scoreSub;
+
+    // Summary
+    const sg = document.getElementById('summaryGrid');
+    sg.innerHTML = '';
+    items.forEach(item => {
+      const dotCls = item.status === 'yellow' ? 'dot-yellow' : item.status === 'orange' ? 'dot-orange' : item.status === 'red' ? 'dot-red' : 'dot-green';
+      const stCls = item.status === 'yellow' ? 'status-yellow' : item.status === 'orange' ? 'status-orange' : item.status === 'red' ? 'status-red' : 'status-green';
+      sg.innerHTML += `
+        <div class="summary-item">
+          <div class="summary-dot ${dotCls}"></div>
+          <div class="summary-name">${item.name}</div>
+          <div class="summary-val">${item.value}${item.unit ? ' ' + item.unit : ''}</div>
+          <div class="summary-status ${stCls}">${item.statusLabel}</div>
+        </div>`;
+    });
+
+    // Overall advice
+    const oa = document.getElementById('overallAdvice');
+    oa.style.display = 'block';
+    document.getElementById('overallAdviceText').textContent = overallText;
+
+    // Advice cards
+    const ac = document.getElementById('adviceCards');
+    ac.innerHTML = '';
+    items.forEach(item => {
+      const adv = item.extra || item.advice;
+      const tips = adv.tips || [];
+      ac.innerHTML += `
+        <div class="advice-card ${item.status}">
+          <div class="advice-title">${adv.title}</div>
+          <div class="advice-value">測定値: <strong>${item.value}${item.unit ? ' ' + item.unit : ''}</strong> ／ 判定: <strong>${item.statusLabel}</strong></div>
+          ${tips.length > 0 ? `<div class="advice-tips"><ul>${tips.map(t => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+        </div>`;
+    });
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetForm() {
+    document.querySelectorAll('input[type=number]').forEach(i => i.value = '');
+    document.querySelectorAll('input[type=radio]').forEach(r => {
+      if (r.value === 'neg') r.checked = true;
+    });
+    document.getElementById('sex').value = 'male';
+    document.getElementById('results').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

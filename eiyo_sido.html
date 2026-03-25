@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>特定保健指導 栄養・運動改善プランシステム</title>
+<style>
+  :root {
+    --primary: #2e7d6e;
+    --primary-light: #4aada0;
+    --primary-dark: #1f5c52;
+    --accent: #f0a500;
+    --accent-light: #ffd166;
+    --bg: #f4f7f6;
+    --card-bg: #ffffff;
+    --text: #2c3e35;
+    --text-muted: #6b8077;
+    --border: #d0e0dc;
+    --danger: #e05c5c;
+    --success: #3aaa6a;
+    --warning: #f0a500;
+    --info: #4a90d9;
+    --step-inactive: #c8d9d5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+    color: white;
+    padding: 28px 40px 24px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  header p {
+    font-size: 0.88rem;
+    opacity: 0.85;
+    letter-spacing: 0.03em;
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 20px;
+    font-size: 0.72rem;
+    padding: 2px 10px;
+    margin-bottom: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ===== STEP PROGRESS ===== */
+  .progress-wrap {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .steps {
+    display: flex;
+    align-items: center;
+    max-width: 860px;
+    margin: 0 auto;
+    gap: 0;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--step-inactive);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.3s;
+    z-index: 1;
+  }
+  .step-item.active .step-circle {
+    background: var(--primary);
+    box-shadow: 0 0 0 4px rgba(46,125,110,0.2);
+  }
+  .step-item.done .step-circle {
+    background: var(--success);
+  }
+  .step-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+    white-space: nowrap;
+    transition: color 0.3s;
+  }
+  .step-item.active .step-label { color: var(--primary); font-weight: 600; }
+  .step-item.done .step-label { color: var(--success); }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--step-inactive);
+    margin: 0 8px;
+    transition: background 0.3s;
+  }
+  .step-item.done + .step-line,
+  .step-line.done { background: var(--success); }
+
+  /* ===== MAIN ===== */
+  .main {
+    max-width: 860px;
+    margin: 32px auto;
+    padding: 0 20px 60px;
+  }
+
+  /* ===== CARD ===== */
+  .card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 32px 36px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon {
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  /* ===== FORM ===== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.cols-1 { grid-template-columns: 1fr; }
+  @media(max-width:600px) {
+    .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+  label .required {
+    color: var(--danger);
+    margin-left: 3px;
+    font-size: 0.75rem;
+  }
+  label .unit {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-left: 4px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    color: var(--text);
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fafcfb;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(74,173,160,0.15);
+    background: white;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .bmi-display {
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    background: #f0f7f5;
+    border: 1.5px solid var(--border);
+    color: var(--primary-dark);
+    min-height: 40px;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .radio-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    user-select: none;
+    background: #fafcfb;
+  }
+  .radio-btn input { display: none; }
+  .radio-btn.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    font-weight: 600;
+  }
+  .radio-btn:hover:not(.selected) { border-color: var(--primary-light); background: #edf7f5; }
+
+  .check-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .check-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.83rem;
+    transition: all 0.2s;
+    user-select: none;
+    background: #fafcfb;
+  }
+  .check-btn input { display: none; }
+  .check-btn.selected {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+    color: white;
+    font-weight: 600;
+  }
+  .check-btn:hover:not(.selected) { border-color: var(--primary-light); background: #edf7f5; }
+
+  /* ===== STEP PAGES ===== */
+  .step-page { display: none; }
+  .step-page.active { display: block; }
+
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 6px;
+  }
+  .page-desc {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* ===== NAVIGATION BUTTONS ===== */
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    gap: 16px;
+  }
+  .btn {
+    padding: 12px 32px;
+    border-radius: 40px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 3px 10px rgba(46,125,110,0.3);
+  }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 5px 14px rgba(46,125,110,0.35); }
+  .btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--primary-light); background: #edf7f5; }
+  .btn-generate {
+    background: linear-gradient(135deg, var(--accent) 0%, #e8901a 100%);
+    color: white;
+    box-shadow: 0 3px 10px rgba(240,165,0,0.35);
+    padding: 13px 40px;
+    font-size: 1rem;
+  }
+  .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 5px 18px rgba(240,165,0,0.4); }
+
+  /* ===== RESULT PLAN ===== */
+  .result-header {
+    text-align: center;
+    padding: 32px 20px 24px;
+    background: linear-gradient(135deg, #1f5c52, var(--primary));
+    border-radius: 14px;
+    color: white;
+    margin-bottom: 24px;
+  }
+  .result-header h2 { font-size: 1.5rem; margin-bottom: 6px; }
+  .result-header p { font-size: 0.85rem; opacity: 0.85; }
+  .result-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+
+  .risk-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+  .risk-banner.high { background: #fde8e8; border-left: 4px solid var(--danger); color: #b02020; }
+  .risk-banner.medium { background: #fff5e0; border-left: 4px solid var(--warning); color: #8a5a00; }
+  .risk-banner.low { background: #e8f7ed; border-left: 4px solid var(--success); color: #1a6e3a; }
+
+  .plan-section {
+    margin-bottom: 28px;
+  }
+  .plan-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #eaf3f1, #f5faf9);
+    border-left: 4px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 14px;
+  }
+
+  .plan-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    align-items: flex-start;
+    transition: box-shadow 0.2s;
+  }
+  .plan-item:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.07); }
+  .plan-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .plan-item-icon.food { background: #fff0e8; }
+  .plan-item-icon.exercise { background: #e8f0ff; }
+  .plan-item-icon.lifestyle { background: #f0ffe8; }
+  .plan-item-icon.caution { background: #fff5e8; }
+  .plan-item-body { flex: 1; }
+  .plan-item-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .plan-item-desc {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .plan-item-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  .tag-high { background: #fde8e8; color: #b02020; }
+  .tag-medium { background: #fff5e0; color: #8a5a00; }
+  .tag-low { background: #e8f7ed; color: #1a6e3a; }
+
+  .goal-card {
+    background: linear-gradient(135deg, #f0f7f5 0%, #e8f5f0 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .goal-card h4 {
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .goal-list {
+    list-style: none;
+    padding: 0;
+  }
+  .goal-list li {
+    font-size: 0.85rem;
+    color: var(--text);
+    padding: 5px 0;
+    border-bottom: 1px dashed #c8ddd9;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .goal-list li:last-child { border-bottom: none; }
+  .goal-list li::before {
+    content: "✓";
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+  .summary-table th {
+    background: #eaf3f1;
+    color: var(--primary-dark);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  .summary-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .val-normal { color: var(--success); font-weight: 600; }
+  .val-warning { color: var(--warning); font-weight: 600; }
+  .val-danger { color: var(--danger); font-weight: 600; }
+
+  .print-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: white;
+    cursor: pointer;
+    color: var(--primary-dark);
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .print-btn:hover { background: #edf7f5; border-color: var(--primary-light); }
+
+  .new-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 28px;
+    border-radius: 30px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(46,125,110,0.25);
+  }
+  .new-btn:hover { background: var(--primary-dark); }
+
+  @media print {
+    header, .progress-wrap, .nav-buttons, .print-btn, .new-btn { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+    body { background: white; }
+  }
+
+  /* ===== SECTION DIVIDER ===== */
+  .section-divider {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: linear-gradient(135deg, #eaf3f1, #f5faf9);
+    padding: 7px 14px;
+    border-radius: 6px;
+    margin: 22px 0 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== TOOLTIP ===== */
+  .hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-page.active { animation: fadeIn 0.3s ease; }
+
+  /* ===== RANGE SLIDER ===== */
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    outline: none;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .range-value-display {
+    text-align: center;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.88rem;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">管理栄養士向け支援ツール</div>
+  <h1>⚕️ 特定保健指導 栄養・運動改善プランシステム</h1>
+  <p>ヒアリング情報をもとに、個別の食事・運動改善プランを自動生成します</p>
+</header>
+
+<!-- STEP PROGRESS BAR -->
+<div class="progress-wrap">
+  <div class="steps">
+    <div class="step-item active" id="si-1">
+      <div class="step-circle">1</div>
+      <span class="step-label">基本情報</span>
+    </div>
+    <div class="step-line" id="sl-1"></div>
+    <div class="step-item" id="si-2">
+      <div class="step-circle">2</div>
+      <span class="step-label">健診結果</span>
+    </div>
+    <div class="step-line" id="sl-2"></div>
+    <div class="step-item" id="si-3">
+      <div class="step-circle">3</div>
+      <span class="step-label">食生活</span>
+    </div>
+    <div class="step-line" id="sl-3"></div>
+    <div class="step-item" id="si-4">
+      <div class="step-circle">4</div>
+      <span class="step-label">運動・生活習慣</span>
+    </div>
+    <div class="step-line" id="sl-4"></div>
+    <div class="step-item" id="si-5">
+      <div class="step-circle">5</div>
+      <span class="step-label">改善プラン</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ===== STEP 1: 基本情報 ===== -->
+  <div class="step-page active" id="page-1">
+    <div class="page-title">👤 基本情報の入力</div>
+    <div class="page-desc">対象者の基本情報を入力してください。BMIは身長・体重から自動計算されます。</div>
+    <div class="card">
+      <div class="card-title"><span class="icon">👤</span> 対象者情報</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>お名前<span class="required">*</span></label>
+          <input type="text" id="name" placeholder="山田 太郎" />
+        </div>
+        <div class="form-group">
+          <label>年齢<span class="required">*</span><span class="unit">歳</span></label>
+          <input type="number" id="age" placeholder="55" min="20" max="100" />
+        </div>
+        <div class="form-group">
+          <label>性別<span class="required">*</span></label>
+          <div class="radio-group" id="gender-group">
+            <label class="radio-btn selected" onclick="selectRadio('gender','male',this)">
+              <input type="radio" name="gender" value="male" checked> 男性
+            </label>
+            <label class="radio-btn" onclick="selectRadio('gender','female',this)">
+              <input type="radio" name="gender" value="female"> 女性
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>身長<span class="required">*</span><span class="unit">cm</span></label>
+          <input type="number" id="height" placeholder="170" min="100" max="220" oninput="calcBMI()" />
+        </div>
+        <div class="form-group">
+          <label>体重<span class="required">*</span><span class="unit">kg</span></label>
+          <input type="number" id="weight" placeholder="72" min="30" max="200" step="0.1" oninput="calcBMI()" />
+        </div>
+        <div class="form-group">
+          <label>BMI（自動計算）</label>
+          <div class="bmi-display" id="bmi-display">—</div>
+        </div>
+        <div class="form-group">
+          <label>職業・仕事の種類</label>
+          <select id="job">
+            <option value="">選択してください</option>
+            <option value="desk">デスクワーク中心</option>
+            <option value="active">立ち仕事・移動多め</option>
+            <option value="manual">肉体労働</option>
+            <option value="home">専業主婦・主夫</option>
+            <option value="retired">定年退職・無職</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-divider">⚠️ 既往歴・服薬状況</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>現在の疾患・既往歴（複数選択可）</label>
+          <div class="check-group" id="disease-group">
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="diabetes"> 糖尿病</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="hypertension"> 高血圧</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="dyslipidemia"> 脂質異常症</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="heart"> 心疾患</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="kidney"> 腎疾患</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="liver"> 肝疾患</label>
+            <label class="check-btn" data-none="true" onclick="toggleCheck(this, event)"><input type="checkbox" value="none"> 特になし</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>現在服薬中の薬（複数選択可）</label>
+          <div class="check-group" id="medicine-group">
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="bp-med"> 降圧薬</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="sugar-med"> 血糖降下薬・インスリン</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="lipid-med"> 脂質異常症薬</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="other-med"> その他</label>
+            <label class="check-btn" data-none="true" onclick="toggleCheck(this, event)"><input type="checkbox" value="no-med"> 服薬なし</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(2)">次へ：健診結果 →</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: 健診結果 ===== -->
+  <div class="step-page" id="page-2">
+    <div class="page-title">🩺 健診結果の入力</div>
+    <div class="page-desc">最新の特定健診結果を入力してください。空欄でも次に進めますが、入力するほど精度が上がります。</div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📏</span> 身体計測・血圧</div>
+      <div class="form-grid cols-3">
+        <div class="form-group">
+          <label>腹囲<span class="unit">cm</span></label>
+          <input type="number" id="waist" placeholder="90" min="50" max="160" step="0.1" />
+          <span class="hint">基準値：男性85cm未満 / 女性90cm未満</span>
+        </div>
+        <div class="form-group">
+          <label>収縮期血圧<span class="unit">mmHg</span></label>
+          <input type="number" id="sbp" placeholder="130" min="60" max="250" />
+          <span class="hint">基準値：130mmHg未満</span>
+        </div>
+        <div class="form-group">
+          <label>拡張期血圧<span class="unit">mmHg</span></label>
+          <input type="number" id="dbp" placeholder="85" min="40" max="150" />
+          <span class="hint">基準値：85mmHg未満</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🩸</span> 血液検査</div>
+      <div class="form-grid cols-3">
+        <div class="form-group">
+          <label>空腹時血糖<span class="unit">mg/dL</span></label>
+          <input type="number" id="bs" placeholder="108" min="50" max="600" />
+          <span class="hint">基準値：100mg/dL未満</span>
+        </div>
+        <div class="form-group">
+          <label>HbA1c<span class="unit">%</span></label>
+          <input type="number" id="hba1c" placeholder="5.8" min="3" max="15" step="0.1" />
+          <span class="hint">基準値：5.6%未満</span>
+        </div>
+        <div class="form-group">
+          <label>中性脂肪<span class="unit">mg/dL</span></label>
+          <input type="number" id="tg" placeholder="160" min="20" max="1000" />
+          <span class="hint">基準値：150mg/dL未満</span>
+        </div>
+        <div class="form-group">
+          <label>HDLコレステロール<span class="unit">mg/dL</span></label>
+          <input type="number" id="hdl" placeholder="52" min="10" max="150" />
+          <span class="hint">基準値：40mg/dL以上</span>
+        </div>
+        <div class="form-group">
+          <label>LDLコレステロール<span class="unit">mg/dL</span></label>
+          <input type="number" id="ldl" placeholder="145" min="30" max="400" />
+          <span class="hint">基準値：120mg/dL未満</span>
+        </div>
+        <div class="form-group">
+          <label>ALT（GPT）<span class="unit">U/L</span></label>
+          <input type="number" id="alt" placeholder="35" min="1" max="1000" />
+          <span class="hint">基準値：30U/L未満</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📋</span> 特定保健指導区分</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>指導区分</label>
+          <div class="radio-group" id="guidance-group">
+            <label class="radio-btn selected" onclick="selectRadio('guidance','active',this)">
+              <input type="radio" name="guidance" value="active" checked> 積極的支援
+            </label>
+            <label class="radio-btn" onclick="selectRadio('guidance','motivate',this)">
+              <input type="radio" name="guidance" value="motivate"> 動機付け支援
+            </label>
+            <label class="radio-btn" onclick="selectRadio('guidance','info',this)">
+              <input type="radio" name="guidance" value="info"> 情報提供
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(1)">← 戻る</button>
+      <button class="btn btn-primary" onclick="goStep(3)">次へ：食生活 →</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: 食生活 ===== -->
+  <div class="step-page" id="page-3">
+    <div class="page-title">🍱 食生活のヒアリング</div>
+    <div class="page-desc">日常の食習慣について確認します。対象者から聞き取った内容をご入力ください。</div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🌅</span> 食事の規則性</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>朝食の摂取状況</label>
+          <div class="radio-group" id="breakfast-group">
+            <label class="radio-btn selected" onclick="selectRadio('breakfast','everyday',this)"><input type="radio" name="breakfast" value="everyday" checked> 毎日食べる</label>
+            <label class="radio-btn" onclick="selectRadio('breakfast','sometimes',this)"><input type="radio" name="breakfast" value="sometimes"> 週3〜4回</label>
+            <label class="radio-btn" onclick="selectRadio('breakfast','rarely',this)"><input type="radio" name="breakfast" value="rarely"> ほぼ食べない</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>1日の食事回数</label>
+          <div class="radio-group" id="mealcount-group">
+            <label class="radio-btn" onclick="selectRadio('mealcount','1',this)"><input type="radio" name="mealcount" value="1"> 1食</label>
+            <label class="radio-btn" onclick="selectRadio('mealcount','2',this)"><input type="radio" name="mealcount" value="2"> 2食</label>
+            <label class="radio-btn selected" onclick="selectRadio('mealcount','3',this)"><input type="radio" name="mealcount" value="3" checked> 3食</label>
+            <label class="radio-btn" onclick="selectRadio('mealcount','more',this)"><input type="radio" name="mealcount" value="more"> 3食以上</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>食べる速さ</label>
+          <div class="radio-group" id="eatspeed-group">
+            <label class="radio-btn" onclick="selectRadio('eatspeed','slow',this)"><input type="radio" name="eatspeed" value="slow"> ゆっくり</label>
+            <label class="radio-btn selected" onclick="selectRadio('eatspeed','normal',this)"><input type="radio" name="eatspeed" value="normal" checked> 普通</label>
+            <label class="radio-btn" onclick="selectRadio('eatspeed','fast',this)"><input type="radio" name="eatspeed" value="fast"> 速い</label>
+            <label class="radio-btn" onclick="selectRadio('eatspeed','veryfast',this)"><input type="radio" name="eatspeed" value="veryfast"> とても速い</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>夕食から就寝までの時間</label>
+          <div class="radio-group" id="sleeptime-group">
+            <label class="radio-btn" onclick="selectRadio('sleeptime','2h',this)"><input type="radio" name="sleeptime" value="2h"> 2時間以内</label>
+            <label class="radio-btn selected" onclick="selectRadio('sleeptime','3h',this)"><input type="radio" name="sleeptime" value="3h" checked> 2〜3時間</label>
+            <label class="radio-btn" onclick="selectRadio('sleeptime','more3h',this)"><input type="radio" name="sleeptime" value="more3h"> 3時間以上</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🏪</span> 食事の内容・場所</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>外食・テイクアウトの頻度</label>
+          <div class="radio-group" id="eating-out-group">
+            <label class="radio-btn selected" onclick="selectRadio('eating-out','rarely',this)"><input type="radio" name="eating-out" value="rarely" checked> ほぼなし</label>
+            <label class="radio-btn" onclick="selectRadio('eating-out','sometimes',this)"><input type="radio" name="eating-out" value="sometimes"> 週1〜2回</label>
+            <label class="radio-btn" onclick="selectRadio('eating-out','often',this)"><input type="radio" name="eating-out" value="often"> 週3〜5回</label>
+            <label class="radio-btn" onclick="selectRadio('eating-out','everyday',this)"><input type="radio" name="eating-out" value="everyday"> ほぼ毎日</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>間食の習慣</label>
+          <div class="radio-group" id="snack-group">
+            <label class="radio-btn selected" onclick="selectRadio('snack','none',this)"><input type="radio" name="snack" value="none" checked> ほぼない</label>
+            <label class="radio-btn" onclick="selectRadio('snack','sometimes',this)"><input type="radio" name="snack" value="sometimes"> 週2〜3回</label>
+            <label class="radio-btn" onclick="selectRadio('snack','everyday',this)"><input type="radio" name="snack" value="everyday"> 毎日食べる</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>野菜の摂取量（1日あたり）</label>
+          <div class="radio-group" id="veggie-group">
+            <label class="radio-btn" onclick="selectRadio('veggie','little',this)"><input type="radio" name="veggie" value="little"> 少ない（1皿以下）</label>
+            <label class="radio-btn selected" onclick="selectRadio('veggie','moderate',this)"><input type="radio" name="veggie" value="moderate" checked> 中程度（2〜3皿）</label>
+            <label class="radio-btn" onclick="selectRadio('veggie','plenty',this)"><input type="radio" name="veggie" value="plenty"> 多い（4皿以上）</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>主食（ご飯・パン・麺）の摂取量</label>
+          <div class="radio-group" id="staple-group">
+            <label class="radio-btn" onclick="selectRadio('staple','little',this)"><input type="radio" name="staple" value="little"> 少なめ</label>
+            <label class="radio-btn selected" onclick="selectRadio('staple','normal',this)"><input type="radio" name="staple" value="normal" checked> 普通</label>
+            <label class="radio-btn" onclick="selectRadio('staple','much',this)"><input type="radio" name="staple" value="much"> 多め</label>
+            <label class="radio-btn" onclick="selectRadio('staple','verymuch',this)"><input type="radio" name="staple" value="verymuch"> とても多い</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>よく飲む飲み物（複数選択可）</label>
+          <div class="check-group" id="drink-group">
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="water"> 水・お茶</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="juice"> ジュース・炭酸飲料</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="sports"> スポーツ飲料</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="coffee-sugar"> 加糖コーヒー・缶コーヒー</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="alcohol"> お酒（飲酒欄で詳細入力）</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>塩分摂取に関して（気になること）</label>
+          <div class="check-group" id="salt-group">
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="ramen"> ラーメン・汁物を毎日食べる</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="pickles"> 漬物・塩辛い食品が好き</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="sauce"> 醤油・ソースをかけ過ぎる</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="processed"> 加工食品・インスタントが多い</label>
+            <label class="check-btn" data-none="true" onclick="toggleCheck(this, event)"><input type="checkbox" value="nosalt"> 特に気にならない</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">💬</span> 食事に関する本人の認識</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>食生活を改善したいと思っているか</label>
+          <div class="radio-group" id="food-motivation-group">
+            <label class="radio-btn" onclick="selectRadio('food-motivation','yes',this)"><input type="radio" name="food-motivation" value="yes"> 強く思う</label>
+            <label class="radio-btn selected" onclick="selectRadio('food-motivation','somewhat',this)"><input type="radio" name="food-motivation" value="somewhat" checked> やや思う</label>
+            <label class="radio-btn" onclick="selectRadio('food-motivation','little',this)"><input type="radio" name="food-motivation" value="little"> あまり思わない</label>
+            <label class="radio-btn" onclick="selectRadio('food-motivation','no',this)"><input type="radio" name="food-motivation" value="no"> 思わない</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>食事改善の自信</label>
+          <div class="radio-group" id="food-confidence-group">
+            <label class="radio-btn" onclick="selectRadio('food-confidence','yes',this)"><input type="radio" name="food-confidence" value="yes"> ある</label>
+            <label class="radio-btn selected" onclick="selectRadio('food-confidence','somewhat',this)"><input type="radio" name="food-confidence" value="somewhat" checked> 少しある</label>
+            <label class="radio-btn" onclick="selectRadio('food-confidence','little',this)"><input type="radio" name="food-confidence" value="little"> あまりない</label>
+            <label class="radio-btn" onclick="selectRadio('food-confidence','no',this)"><input type="radio" name="food-confidence" value="no"> ない</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>食事面での気になること・困っていること</label>
+          <textarea id="food-concern" placeholder="例：仕事が忙しくて外食が多い、甘いものがやめられない、など"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(2)">← 戻る</button>
+      <button class="btn btn-primary" onclick="goStep(4)">次へ：運動・生活習慣 →</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: 運動・生活習慣 ===== -->
+  <div class="step-page" id="page-4">
+    <div class="page-title">🏃 運動・生活習慣のヒアリング</div>
+    <div class="page-desc">運動習慣、飲酒・喫煙、睡眠などの生活習慣を確認します。</div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🏃</span> 運動習慣</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>定期的な運動の習慣</label>
+          <div class="radio-group" id="exercise-group">
+            <label class="radio-btn" onclick="selectRadio('exercise','yes',this)"><input type="radio" name="exercise" value="yes"> ある（週2回以上）</label>
+            <label class="radio-btn" onclick="selectRadio('exercise','sometimes',this)"><input type="radio" name="exercise" value="sometimes"> 週1回程度</label>
+            <label class="radio-btn selected" onclick="selectRadio('exercise','rarely',this)"><input type="radio" name="exercise" value="rarely" checked> ほぼない</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>よくする運動の種類</label>
+          <div class="check-group" id="ex-type-group">
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="walk"> ウォーキング</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="bike"> 自転車</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="swim"> 水泳</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="gym"> ジム・筋トレ</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="sport"> スポーツ</label>
+            <label class="check-btn" data-none="true" onclick="toggleCheck(this, event)"><input type="checkbox" value="none-ex"> 特になし</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>1日の歩行時間（通勤・買い物含む）</label>
+          <div class="radio-group" id="walk-group">
+            <label class="radio-btn" onclick="selectRadio('walk','under30',this)"><input type="radio" name="walk" value="under30"> 30分未満</label>
+            <label class="radio-btn selected" onclick="selectRadio('walk','30to60',this)"><input type="radio" name="walk" value="30to60" checked> 30〜60分</label>
+            <label class="radio-btn" onclick="selectRadio('walk','over60',this)"><input type="radio" name="walk" value="over60"> 60分以上</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>座っている時間（1日あたり）</label>
+          <div class="radio-group" id="sitting-group">
+            <label class="radio-btn" onclick="selectRadio('sitting','under5',this)"><input type="radio" name="sitting" value="under5"> 5時間未満</label>
+            <label class="radio-btn selected" onclick="selectRadio('sitting','5to8',this)"><input type="radio" name="sitting" value="5to8" checked> 5〜8時間</label>
+            <label class="radio-btn" onclick="selectRadio('sitting','over8',this)"><input type="radio" name="sitting" value="over8"> 8時間以上</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>運動を増やしたいと思っているか</label>
+          <div class="radio-group" id="ex-motivation-group">
+            <label class="radio-btn" onclick="selectRadio('ex-motivation','yes',this)"><input type="radio" name="ex-motivation" value="yes"> 強く思う</label>
+            <label class="radio-btn selected" onclick="selectRadio('ex-motivation','somewhat',this)"><input type="radio" name="ex-motivation" value="somewhat" checked> やや思う</label>
+            <label class="radio-btn" onclick="selectRadio('ex-motivation','little',this)"><input type="radio" name="ex-motivation" value="little"> あまり思わない</label>
+            <label class="radio-btn" onclick="selectRadio('ex-motivation','no',this)"><input type="radio" name="ex-motivation" value="no"> 思わない</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>運動しない主な理由</label>
+          <div class="check-group" id="ex-barrier-group">
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="time"> 時間がない</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="body"> 身体が痛い・しんどい</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="motivate"> やる気が出ない</label>
+            <label class="check-btn" onclick="toggleCheck(this, event)"><input type="checkbox" value="method"> 何をすれば良いかわからない</label>
+            <label class="check-btn" data-none="true" onclick="toggleCheck(this, event)"><input type="checkbox" value="na"> 特に理由なし</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🍺</span> 飲酒・喫煙</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>飲酒の頻度</label>
+          <div class="radio-group" id="alcohol-group">
+            <label class="radio-btn selected" onclick="selectRadio('alcohol','none',this)"><input type="radio" name="alcohol" value="none" checked> 飲まない</label>
+            <label class="radio-btn" onclick="selectRadio('alcohol','sometimes',this)"><input type="radio" name="alcohol" value="sometimes"> 時々（月数回）</label>
+            <label class="radio-btn" onclick="selectRadio('alcohol','weekly',this)"><input type="radio" name="alcohol" value="weekly"> 週2〜3回</label>
+            <label class="radio-btn" onclick="selectRadio('alcohol','everyday',this)"><input type="radio" name="alcohol" value="everyday"> ほぼ毎日</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>1回あたりの飲酒量（目安）</label>
+          <div class="radio-group" id="alcohol-amount-group">
+            <label class="radio-btn selected" onclick="selectRadio('alcohol-amount','small',this)"><input type="radio" name="alcohol-amount" value="small" checked> 1合（ビール500ml）以下</label>
+            <label class="radio-btn" onclick="selectRadio('alcohol-amount','medium',this)"><input type="radio" name="alcohol-amount" value="medium"> 1〜2合程度</label>
+            <label class="radio-btn" onclick="selectRadio('alcohol-amount','large',this)"><input type="radio" name="alcohol-amount" value="large"> 3合以上</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>喫煙状況</label>
+          <div class="radio-group" id="smoking-group">
+            <label class="radio-btn selected" onclick="selectRadio('smoking','never',this)"><input type="radio" name="smoking" value="never" checked> 吸わない</label>
+            <label class="radio-btn" onclick="selectRadio('smoking','quit',this)"><input type="radio" name="smoking" value="quit"> 禁煙中・過去に吸っていた</label>
+            <label class="radio-btn" onclick="selectRadio('smoking','current',this)"><input type="radio" name="smoking" value="current"> 現在も吸っている</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">😴</span> 睡眠・ストレス</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>睡眠時間（1日平均）</label>
+          <div class="radio-group" id="sleep-group">
+            <label class="radio-btn" onclick="selectRadio('sleep','under5',this)"><input type="radio" name="sleep" value="under5"> 5時間未満</label>
+            <label class="radio-btn" onclick="selectRadio('sleep','5to6',this)"><input type="radio" name="sleep" value="5to6"> 5〜6時間</label>
+            <label class="radio-btn selected" onclick="selectRadio('sleep','6to7',this)"><input type="radio" name="sleep" value="6to7" checked> 6〜7時間</label>
+            <label class="radio-btn" onclick="selectRadio('sleep','over7',this)"><input type="radio" name="sleep" value="over7"> 7時間以上</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>睡眠の質</label>
+          <div class="radio-group" id="sleep-quality-group">
+            <label class="radio-btn" onclick="selectRadio('sleep-quality','good',this)"><input type="radio" name="sleep-quality" value="good"> 良い</label>
+            <label class="radio-btn selected" onclick="selectRadio('sleep-quality','normal',this)"><input type="radio" name="sleep-quality" value="normal" checked> 普通</label>
+            <label class="radio-btn" onclick="selectRadio('sleep-quality','bad',this)"><input type="radio" name="sleep-quality" value="bad"> 悪い（眠れない・途中で起きる）</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>日常的なストレスレベル</label>
+          <input type="range" id="stress-range" min="1" max="5" value="3" oninput="updateRange()">
+          <div class="range-labels">
+            <span>低い</span><span>やや低い</span><span>普通</span><span>やや高い</span><span>高い</span>
+          </div>
+          <div class="range-value-display" id="stress-display">普通（3/5）</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> 行動変容の準備性</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>生活習慣を改善しようとする準備状態</label>
+          <div class="radio-group" id="stage-group">
+            <label class="radio-btn" onclick="selectRadio('stage','precon',this)"><input type="radio" name="stage" value="precon"> 前熟考期（変えるつもりがない）</label>
+            <label class="radio-btn" onclick="selectRadio('stage','con',this)"><input type="radio" name="stage" value="con"> 熟考期（変えたいと思っている）</label>
+            <label class="radio-btn selected" onclick="selectRadio('stage','prep',this)"><input type="radio" name="stage" value="prep" checked> 準備期（近く始める予定）</label>
+            <label class="radio-btn" onclick="selectRadio('stage','action',this)"><input type="radio" name="stage" value="action"> 実行期（既に取り組んでいる）</label>
+            <label class="radio-btn" onclick="selectRadio('stage','maintain',this)"><input type="radio" name="stage" value="maintain"> 維持期（6ヶ月以上継続中）</label>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>本人の希望・相談したいこと</label>
+          <textarea id="person-concern" placeholder="例：体重を10kg落としたい、血糖値を下げたい、膝が痛くて運動できないが何かできることを教えてほしい、など"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(3)">← 戻る</button>
+      <button class="btn btn-generate" onclick="generatePlan()">🔍 改善プランを生成する</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 5: 改善プラン ===== -->
+  <div class="step-page" id="page-5">
+    <div id="plan-content"><!-- 動的に生成 --></div>
+    <div class="nav-buttons" style="margin-top:0">
+      <button class="print-btn" onclick="window.print()">🖨️ 印刷する</button>
+      <button class="new-btn" onclick="resetForm()">🔄 新規入力を始める</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ===== STATE =====
+let currentStep = 1;
+const radioValues = {};
+
+// ===== NAVIGATION =====
+function goStep(step) {
+  document.getElementById('page-' + currentStep).classList.remove('active');
+  document.getElementById('si-' + currentStep).classList.remove('active');
+  document.getElementById('si-' + currentStep).classList.add('done');
+  if (currentStep < step) {
+    for (let i = currentStep; i < step; i++) {
+      const line = document.getElementById('sl-' + i);
+      if (line) line.classList.add('done');
+    }
+  }
+  currentStep = step;
+  document.getElementById('page-' + step).classList.add('active');
+  document.getElementById('si-' + step).classList.remove('done');
+  document.getElementById('si-' + step).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== RADIO =====
+function selectRadio(name, value, el) {
+  radioValues[name] = value;
+  const group = el.closest('.radio-group');
+  group.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== CHECKBOX =====
+function toggleCheck(el, event) {
+  if (event) event.preventDefault();
+  const group = el.closest('.check-group');
+  const isNoneOption = el.dataset.none === 'true';
+  const willBeSelected = !el.classList.contains('selected');
+
+  if (isNoneOption && willBeSelected) {
+    // 「特になし」系を選んだら他をすべて解除
+    group.querySelectorAll('.check-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+  } else {
+    el.classList.toggle('selected');
+    // 他の項目を選んだら「特になし」系を解除
+    if (willBeSelected) {
+      group.querySelectorAll('.check-btn[data-none="true"]').forEach(b => b.classList.remove('selected'));
+    }
+  }
+}
+
+function getChecked(groupId) {
+  const group = document.getElementById(groupId);
+  if (!group) return [];
+  return Array.from(group.querySelectorAll('.check-btn.selected input')).map(i => i.value);
+}
+
+// ===== BMI =====
+function calcBMI() {
+  const h = parseFloat(document.getElementById('height').value);
+  const w = parseFloat(document.getElementById('weight').value);
+  const disp = document.getElementById('bmi-display');
+  if (!h || !w || h < 100 || w < 20) { disp.textContent = '—'; disp.style.color = ''; return; }
+  const bmi = (w / ((h/100) * (h/100))).toFixed(1);
+  let label = '';
+  if (bmi < 18.5) { label = '低体重（やせ）'; disp.style.color = '#4a90d9'; }
+  else if (bmi < 25) { label = '普通体重'; disp.style.color = '#3aaa6a'; }
+  else if (bmi < 30) { label = '肥満（1度）'; disp.style.color = '#f0a500'; }
+  else if (bmi < 35) { label = '肥満（2度）'; disp.style.color = '#e05c5c'; }
+  else { label = '肥満（3度以上）'; disp.style.color = '#b00000'; }
+  disp.textContent = bmi + '　' + label;
+}
+
+// ===== RANGE =====
+const stressLabels = ['低い', 'やや低い', '普通', 'やや高い', '高い'];
+function updateRange() {
+  const v = document.getElementById('stress-range').value;
+  document.getElementById('stress-display').textContent = stressLabels[v-1] + '（' + v + '/5）';
+}
+
+// ===== RESET =====
+function resetForm() {
+  if (!confirm('入力内容をリセットして最初からやり直しますか？')) return;
+  location.reload();
+}
+
+// ===== HELPERS =====
+function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function getRadio(name) { return radioValues[name] || ''; }
+
+function valClass(v, good, warn) {
+  if (!v) return '';
+  v = parseFloat(v);
+  if (v <= good) return 'val-normal';
+  if (v <= warn) return 'val-warning';
+  return 'val-danger';
+}
+function valClassHDL(v) {
+  if (!v) return '';
+  v = parseFloat(v);
+  if (v >= 60) return 'val-normal';
+  if (v >= 40) return 'val-warning';
+  return 'val-danger';
+}
+
+function makeItem(icon, iconClass, tag, tagClass, title, desc) {
+  return `<div class="plan-item">
+    <div class="plan-item-icon ${iconClass}">${icon}</div>
+    <div class="plan-item-body">
+      <div><span class="plan-item-tag ${tagClass}">${tag}</span></div>
+      <div class="plan-item-title">${title}</div>
+      <div class="plan-item-desc">${desc}</div>
+    </div>
+  </div>`;
+}
+
+// ===== GENERATE PLAN =====
+function generatePlan() {
+  // 収集
+  const name = getVal('name') || '対象者';
+  const age = getVal('age');
+  const gender = getRadio('gender') || 'male';
+  const height = getVal('height');
+  const weight = getVal('weight');
+  let bmi = '—';
+  if (height && weight) bmi = (parseFloat(weight) / Math.pow(parseFloat(height)/100, 2)).toFixed(1);
+
+  const waist = getVal('waist');
+  const sbp = getVal('sbp');
+  const dbp = getVal('dbp');
+  const bs = getVal('bs');
+  const hba1c = getVal('hba1c');
+  const tg = getVal('tg');
+  const hdl = getVal('hdl');
+  const ldl = getVal('ldl');
+  const alt = getVal('alt');
+
+  const breakfast = getRadio('breakfast') || 'everyday';
+  const eatspeed = getRadio('eatspeed') || 'normal';
+  const sleeptime = getRadio('sleeptime') || '3h';
+  const eatingOut = getRadio('eating-out') || 'rarely';
+  const snack = getRadio('snack') || 'none';
+  const veggie = getRadio('veggie') || 'moderate';
+  const staple = getRadio('staple') || 'normal';
+  const saltIssues = getChecked('salt-group');
+
+  const exercise = getRadio('exercise') || 'rarely';
+  const walk = getRadio('walk') || '30to60';
+  const sitting = getRadio('sitting') || '5to8';
+  const alcohol = getRadio('alcohol') || 'none';
+  const alcoholAmt = getRadio('alcohol-amount') || 'small';
+  const smoking = getRadio('smoking') || 'never';
+  const sleep = getRadio('sleep') || '6to7';
+  const sleepQuality = getRadio('sleep-quality') || 'normal';
+  const stress = parseInt(document.getElementById('stress-range').value);
+  const stage = getRadio('stage') || 'prep';
+  const concern = getVal('person-concern');
+  const diseases = getChecked('disease-group');
+
+  // リスク判定
+  let riskScore = 0;
+  if (parseFloat(bmi) >= 25) riskScore += 2;
+  if (parseFloat(bmi) >= 30) riskScore += 1;
+  if (gender === 'male' && parseFloat(waist) >= 85) riskScore += 2;
+  if (gender === 'female' && parseFloat(waist) >= 90) riskScore += 2;
+  if (parseFloat(sbp) >= 130 || parseFloat(dbp) >= 85) riskScore += 1;
+  if (parseFloat(sbp) >= 140 || parseFloat(dbp) >= 90) riskScore += 1;
+  if (parseFloat(bs) >= 100) riskScore += 1;
+  if (parseFloat(bs) >= 126) riskScore += 2;
+  if (parseFloat(hba1c) >= 5.6) riskScore += 1;
+  if (parseFloat(hba1c) >= 6.5) riskScore += 2;
+  if (parseFloat(tg) >= 150) riskScore += 1;
+  if (parseFloat(tg) >= 300) riskScore += 1;
+  if (parseFloat(hdl) < 40) riskScore += 2;
+  if (parseFloat(ldl) >= 120) riskScore += 1;
+  if (parseFloat(ldl) >= 160) riskScore += 1;
+  if (alcohol === 'everyday') riskScore += 1;
+  if (smoking === 'current') riskScore += 2;
+  if (exercise === 'rarely') riskScore += 1;
+  if (breakfast === 'rarely') riskScore += 1;
+
+  let riskLevel = riskScore >= 8 ? 'high' : riskScore >= 4 ? 'medium' : 'low';
+  let riskText = riskScore >= 8
+    ? '⚠️ 複数のリスク因子が重なっており、生活習慣病発症・悪化リスクが高い状態です。早急な生活習慣の改善が必要です。'
+    : riskScore >= 4
+    ? '注意が必要な項目が見られます。現時点での改善取り組みが今後の健康維持に重要です。'
+    : '大きな異常値はありませんが、予防的な生活習慣改善を継続しましょう。';
+
+  // ===== 食事改善プラン生成 =====
+  let foodItems = '';
+
+  if (breakfast === 'rarely' || breakfast === 'sometimes') {
+    foodItems += makeItem('🌅','food','優先','tag-high','朝食を毎日食べる習慣をつける',
+      '朝食欠食は夕食・夜食の過食につながりやすく、血糖値の乱高下を招きます。まずはおにぎり1個＋味噌汁など、簡単なもので構いません。週5日以上を目標にしましょう。');
+  }
+  if (eatspeed === 'fast' || eatspeed === 'veryfast') {
+    foodItems += makeItem('🥢','food','優先','tag-high','よく噛んでゆっくり食べる',
+      '早食いは満腹感が得られにくく食べ過ぎにつながります。1口30回を目安によく噛む、食間に箸を置く、食事に20分以上かける習慣をつけましょう。');
+  }
+  if (sleeptime === '2h') {
+    foodItems += makeItem('🌙','food','改善','tag-high','夕食から就寝まで3時間以上あける',
+      '就寝直前の食事は脂肪として蓄積しやすくなります。夕食は就寝3時間前までに済ませるよう工夫しましょう。遅くなる場合は夕方に軽食をとり、夕食を少量にする「分食」が効果的です。');
+  }
+  if (veggie === 'little') {
+    foodItems += makeItem('🥦','food','優先','tag-high','野菜の摂取量を増やす（1日350g以上）',
+      '野菜には食物繊維・ビタミン・ミネラルが豊富です。食事の最初に野菜から食べる「ベジファースト」を実践しましょう。毎食に1〜2品の野菜料理を取り入れることを目標にしてください。');
+  }
+  if (staple === 'much' || staple === 'verymuch') {
+    foodItems += makeItem('🍚','food','改善','tag-medium','主食の量を適量にコントロールする',
+      '主食（ご飯・パン・麺）の食べ過ぎは血糖上昇・カロリー過剰につながります。ご飯は1食150〜180g（茶碗軽め1杯）を目安に。精白米を麦ご飯・玄米に変えるのも有効です。');
+  }
+  if (eatingOut === 'often' || eatingOut === 'everyday') {
+    foodItems += makeItem('🏪','food','改善','tag-medium','外食・テイクアウトを上手に活用する',
+      '外食時は定食よりも単品メニューを選ぶと野菜・栄養バランスが偏りがちです。定食メニューを選ぶ、汁物は飲みきらない、揚げ物を減らす、野菜を追加注文するなど工夫しましょう。');
+  }
+  if (snack === 'everyday') {
+    foodItems += makeItem('🍫','food','改善','tag-medium','間食の内容と量を見直す',
+      '毎日の間食は1日200kcal以内を目標に。菓子パン・スナック菓子から、無塩ナッツ・ヨーグルト・果物（1日80g程度）・チーズなど栄養価の高いものに変えましょう。');
+  }
+  if (saltIssues.includes('ramen') || saltIssues.includes('pickles') || saltIssues.includes('sauce') || saltIssues.includes('processed')) {
+    foodItems += makeItem('🧂','food','改善','tag-medium','塩分を1日7〜8g以内に抑える',
+      'ラーメン・うどんの汁は飲みきらない、醤油やソースはかけず小皿につけて使う、加工食品の栄養成分表示で食塩相当量を確認する、だしの旨みを活かした薄味調理を心がけましょう。');
+  }
+  if (getChecked('drink-group').includes('juice') || getChecked('drink-group').includes('sports')) {
+    foodItems += makeItem('🥤','food','注意','tag-high','砂糖入り飲料を水・お茶に替える',
+      'ジュース・炭酸飲料・スポーツドリンクには多量の糖分が含まれています（500mlで角砂糖10〜15個相当）。普段の飲み物は水・緑茶・麦茶に切り替えることで、気づかないうちに摂っていた糖質・カロリーを大幅に削減できます。');
+  }
+  if (parseFloat(tg) >= 150) {
+    foodItems += makeItem('🐟','food','血液検査','tag-medium','中性脂肪を下げる食事のポイント',
+      '中性脂肪が高めです。①果物・ジュース・砂糖の摂り過ぎを控える ②アルコールを減らす ③EPA・DHAを含む青魚（さば・いわし・さんま）を週2〜3回取り入れる ④精製糖質よりも食物繊維豊富な食品を選ぶ、などが有効です。');
+  }
+  if (parseFloat(ldl) >= 120) {
+    foodItems += makeItem('🫀','food','血液検査','tag-medium','LDLコレステロールを下げる食事のポイント',
+      'コレステロールが高めです。①飽和脂肪酸（バター・ラード・牛豚の脂身・ケーキ）を控える ②食物繊維（野菜・海藻・きのこ・豆類）を積極的に摂る ③植物油（オリーブ油・菜種油）を使う ④卵は1日1個以内を目安に。');
+  }
+  if (parseFloat(bs) >= 100 || parseFloat(hba1c) >= 5.6) {
+    foodItems += makeItem('🩸','food','血液検査','tag-high','血糖値を上げにくい食べ方の工夫',
+      '血糖値・HbA1cが高めです。①食べる順番を「野菜→タンパク質→主食」の順に ②GI値の低い食品（玄米・全粒粉・豆類）を選ぶ ③砂糖・菓子・精製糖質を減らす ④食後30分以内に軽く体を動かす、などが効果的です。');
+  }
+  if (!foodItems) {
+    foodItems += makeItem('✅','food','良好','tag-low','食生活のバランスは比較的良好です',
+      '現在の食習慣を維持しながら、野菜・食物繊維の摂取量を意識することでさらに良くなります。季節の食材・発酵食品（納豆・ヨーグルト・みそ）を積極的に取り入れましょう。');
+  }
+
+  // ===== 運動改善プラン生成 =====
+  let exItems = '';
+
+  if (exercise === 'rarely') {
+    exItems += makeItem('👟','exercise','最初の一歩','tag-high','まずは毎日10分のウォーキングから始める',
+      '運動習慣がない方は、いきなり激しい運動は必要ありません。1日10分のウォーキングを習慣化するところから始めましょう。通勤・買い物・昼休みを活用してOK。歩数計アプリを使って可視化すると継続しやすくなります。');
+    exItems += makeItem('🎯','exercise','目標','tag-medium','3ヶ月後の目標：1日8,000歩・週3回の有酸素運動',
+      'まず1ヶ月は1日5,000歩を目標に、翌月から6,500歩→8,000歩と段階的に増やしましょう。慣れてきたら週2〜3回、30分の速歩きや水泳・自転車などの有酸素運動を取り入れてください。');
+  }
+  if (sitting === 'over8') {
+    exItems += makeItem('🪑','exercise','生活活動','tag-high','長時間の座位を中断する習慣をつける',
+      '座りっぱなしは代謝を下げ、生活習慣病のリスクを高めます。30分に1回は立ち上がる、電話しながら立つ、エレベーターでなく階段を使う、テレビのCM中にストレッチをするなどで「動きの隙間」を作りましょう。');
+  }
+  if (walk === 'under30') {
+    exItems += makeItem('🚶','exercise','歩行','tag-medium','意識的に歩く時間を増やす工夫',
+      '1日の歩行時間が短めです。一駅前で降りて歩く、車を遠い場所に駐車する、昼休みに15分歩くなど生活の中に「歩く機会」を組み込みましょう。スマートフォンの歩数計で毎日確認する習慣もおすすめです。');
+  }
+  if (parseFloat(bmi) >= 25 || (gender === 'male' && parseFloat(waist) >= 85) || (gender === 'female' && parseFloat(waist) >= 90)) {
+    exItems += makeItem('💪','exercise','体重管理','tag-medium','有酸素運動＋筋トレの組み合わせが効果的',
+      '内臓脂肪を減らすには有酸素運動が有効です。週150分以上（1回30分×週5回など）の中強度有酸素運動を目標に。さらに週2回の筋力トレーニング（スクワット・腹筋など）を加えると基礎代謝が上がり、体重管理がしやすくなります。');
+  }
+  if (exercise !== 'rarely') {
+    exItems += makeItem('🏅','exercise','継続','tag-low','現在の運動習慣を維持・発展させる',
+      '運動習慣があることは大変素晴らしいです。現在の運動に加え、強度や時間を少しずつ増やしてみましょう。筋肉量維持のためにタンパク質の摂取（運動後30分以内）も意識してください。');
+  }
+  if (getChecked('ex-barrier-group').includes('time')) {
+    exItems += makeItem('⏱️','exercise','時間がない方へ','tag-low','「ながら運動」で生活に組み込む',
+      '歯磨きしながらかかと上げ・スクワット、電車で立つ・つま先立ち、料理中にその場踏み足など「ながら運動」はまとまった時間がなくても取り組めます。1回5分でも積み重ねれば効果が出ます。');
+  }
+  if (!exItems) {
+    exItems += makeItem('✅','exercise','良好','tag-low','運動習慣は良好です',
+      '現在の運動習慣を継続しつつ、ストレッチ・柔軟運動も加えると怪我の予防・疲労回復に役立ちます。');
+  }
+
+  // ===== 生活習慣改善 =====
+  let lifeItems = '';
+
+  if (alcohol === 'everyday' || alcohol === 'weekly') {
+    let alMsg = '休肝日を週2日以上設けましょう。飲酒量の目安はビール500ml、日本酒1合、ワイン200ml程度（純アルコール20g）が1日の上限。';
+    if (alcoholAmt === 'large') alMsg += ' 現在の飲酒量は多めです。まず量を半分に減らすことを目標にしてください。';
+    lifeItems += makeItem('🍺','lifestyle','飲酒','tag-medium','飲酒量を適正化・休肝日を設ける', alMsg);
+  }
+  if (smoking === 'current') {
+    lifeItems += makeItem('🚬','lifestyle','禁煙','tag-high','禁煙を強くお勧めします',
+      '喫煙は心疾患・脳卒中・がんのリスクを大幅に高め、血圧・脂質にも悪影響を与えます。禁煙外来（保険適用）の利用で成功率が3〜4倍高まります。かかりつけ医への相談をお勧めします。');
+  }
+  if (sleep === 'under5' || sleep === '5to6' || sleepQuality === 'bad') {
+    lifeItems += makeItem('😴','lifestyle','睡眠','tag-medium','睡眠の質・量を改善する',
+      '睡眠不足は食欲を増進させるホルモン（グレリン）を増やし、食べ過ぎ・体重増加につながります。目標は7〜8時間。就寝1時間前はスマホを控える、毎日同じ時間に起床する、寝室を涼しく暗くする習慣が効果的です。');
+  }
+  if (stress >= 4) {
+    lifeItems += makeItem('🧘','lifestyle','ストレス','tag-medium','ストレスマネジメントを取り入れる',
+      '高ストレスは過食・飲酒・睡眠障害につながります。深呼吸・瞑想・ヨガ・入浴・趣味の時間など自分なりのリラックス法を見つけましょう。1日15分の「自分だけの時間」を確保することも大切です。');
+  }
+  if (diseases.includes('hypertension') || parseFloat(sbp) >= 130) {
+    lifeItems += makeItem('💊','lifestyle','血圧','tag-medium','血圧管理のポイント',
+      '血圧が高めです。減塩（1日6g未満）・適正体重の維持・禁煙・アルコール制限・有酸素運動・ストレス軽減が血圧改善に有効です。医師の指示のもと、定期的な血圧測定（家庭血圧）を続けましょう。');
+  }
+  if (!lifeItems) {
+    lifeItems += makeItem('✅','lifestyle','良好','tag-low','生活習慣全般は良好です',
+      '現在の良い習慣を維持しましょう。年1回の健診受診と、日々の体重測定（起床後）を継続することで、変化に早期に気づくことができます。');
+  }
+
+  // ===== 行動目標 =====
+  const guidance = getRadio('guidance') || 'active';
+  let stageAdvice = '';
+  if (stage === 'precon') {
+    stageAdvice = '現在は変化への準備ができていない段階です。まず「なぜ変えた方がいいか」の情報提供と、小さな成功体験から始めることが大切です。';
+  } else if (stage === 'con') {
+    stageAdvice = '「変えたい」という気持ちがある熟考期です。具体的な行動プランを一緒に立て、小さな目標から実践してみましょう。';
+  } else if (stage === 'prep') {
+    stageAdvice = '準備段階に入っています。具体的な開始日を決め、まず1週間の小目標を設定しましょう。';
+  } else if (stage === 'action') {
+    stageAdvice = '既に取り組んでいる実行期です。継続を支持しながら、成果を記録・可視化して自己効力感を高めましょう。';
+  } else if (stage === 'maintain') {
+    stageAdvice = '6ヶ月以上継続中の維持期です。スリップバックに注意しつつ、目標を更新してさらなる改善を目指しましょう。';
+  }
+
+  // HTML生成
+  const today = new Date();
+  const dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
+
+  // 健診値サマリー
+  function valRow(label, val, unit, goodVal, warnVal, isHDL) {
+    if (!val) return '';
+    let cls = isHDL ? valClassHDL(val) : valClass(val, goodVal, warnVal);
+    let status = cls === 'val-normal' ? '✓ 基準内' : cls === 'val-warning' ? '△ 要注意' : '✗ 基準超';
+    return `<tr><td>${label}</td><td class="${cls}">${val}${unit}</td><td class="${cls}" style="font-size:0.78rem">${status}</td></tr>`;
+  }
+
+  const html = `
+  <div class="result-header">
+    <div class="result-name">📋 ${name} 様 の改善プラン</div>
+    <p>作成日：${dateStr}　／　指導区分：${guidance === 'active' ? '積極的支援' : guidance === 'motivate' ? '動機付け支援' : '情報提供'}</p>
+    <p style="font-size:0.8rem;opacity:0.75;margin-top:4px">年齢 ${age||'—'}歳　${gender === 'male' ? '男性' : '女性'}　身長 ${height||'—'}cm　体重 ${weight||'—'}kg　BMI ${bmi}</p>
+  </div>
+
+  <div class="risk-banner ${riskLevel}">${riskText}</div>
+
+  ${(waist || sbp || bs || hba1c || tg || hdl || ldl) ? `
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> 健診値サマリー</div>
+    <table class="summary-table">
+      <thead><tr><th>検査項目</th><th>値</th><th>判定</th></tr></thead>
+      <tbody>
+        ${valRow('腹囲', waist, 'cm', gender==='male'?85:90, gender==='male'?85:90, false)}
+        ${valRow('収縮期血圧', sbp, 'mmHg', 130, 140, false)}
+        ${valRow('拡張期血圧', dbp, 'mmHg', 85, 90, false)}
+        ${valRow('空腹時血糖', bs, 'mg/dL', 100, 126, false)}
+        ${valRow('HbA1c', hba1c, '%', 5.6, 6.5, false)}
+        ${valRow('中性脂肪', tg, 'mg/dL', 150, 300, false)}
+        ${valRow('HDL-C', hdl, 'mg/dL', 0, 0, true)}
+        ${valRow('LDL-C', ldl, 'mg/dL', 120, 160, false)}
+        ${valRow('ALT', alt, 'U/L', 30, 50, false)}
+      </tbody>
+    </table>
+  </div>` : ''}
+
+  <div class="card">
+    <div class="plan-section">
+      <div class="plan-section-title">🍱 食事改善プラン</div>
+      ${foodItems}
+    </div>
+    <div class="plan-section">
+      <div class="plan-section-title">🏃 運動改善プラン</div>
+      ${exItems}
+    </div>
+    <div class="plan-section">
+      <div class="plan-section-title">💡 生活習慣改善ポイント</div>
+      ${lifeItems}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> 行動目標と指導方針</div>
+    <div class="goal-card">
+      <h4>📌 変容ステージに応じた支援方針</h4>
+      <p style="font-size:0.85rem;color:var(--text);line-height:1.6">${stageAdvice}</p>
+    </div>
+    <div class="goal-card">
+      <h4>📝 3ヶ月間の行動目標（例）</h4>
+      <ul class="goal-list">
+        <li>体重を1ヶ月あたり0.5〜1kg減らす（急激な減量はNG）</li>
+        <li>食事は野菜から食べ始める「ベジファースト」を習慣化する</li>
+        <li>週3回以上・1回30分のウォーキングを行う</li>
+        <li>甘い飲み物を水・お茶に切り替える</li>
+        <li>毎朝起床後に体重計に乗り、記録する</li>
+        ${alcohol !== 'none' ? '<li>週2日以上の休肝日を設ける</li>' : ''}
+        ${smoking === 'current' ? '<li>禁煙外来への相談を検討する</li>' : ''}
+      </ul>
+    </div>
+    ${concern ? `<div class="goal-card"><h4>💬 本人の希望・相談内容への対応</h4><p style="font-size:0.85rem;color:var(--text);line-height:1.6">${concern}</p><p style="font-size:0.82rem;color:var(--text-muted);margin-top:8px">上記のご希望を踏まえ、無理のない範囲でできることから取り組んでいただくよう支援します。次回フォローアップ時に進捗を確認します。</p></div>` : ''}
+    <div class="goal-card">
+      <h4>📅 次回フォローアップ</h4>
+      <ul class="goal-list">
+        <li>1ヶ月後：体重・歩数・食事記録の確認</li>
+        <li>3ヶ月後：行動目標の達成度評価・プランの見直し</li>
+        <li>6ヶ月後：積極的支援終了評価（腹囲・体重・生活習慣の改善確認）</li>
+      </ul>
+    </div>
+  </div>
+  `;
+
+  document.getElementById('plan-content').innerHTML = html;
+  goStep(5);
+}
+</script>
+</body>
+</html>

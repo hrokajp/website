@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 あみだくじ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    .page-title {
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+      text-shadow: 0 0 20px rgba(102,126,234,0.8), 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #444;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ===== NAME INPUTS ===== */
+    #name-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .name-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .name-color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .name-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+      color: #333;
+    }
+    .name-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+
+    .btn-remove {
+      background: #fee2e2;
+      color: #ef4444;
+      border: none;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    .btn-remove:hover { background: #fca5a5; transform: scale(1.1); }
+
+    .btn-add {
+      width: 100%;
+      padding: 10px;
+      background: #f0f4ff;
+      color: #667eea;
+      border: 2px dashed #667eea;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+      margin-bottom: 20px;
+    }
+    .btn-add:hover { background: #e0e7ff; }
+
+    /* ===== WINNERS SETTING ===== */
+    .winners-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: #f8faff;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+    }
+    .winners-label { font-size: 0.95rem; color: #555; }
+
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:hover { background: #667eea; color: white; }
+    .qty-display {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #667eea;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    /* ===== GENERATE BUTTON ===== */
+    .btn-generate {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+    }
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102,126,234,0.5);
+    }
+    .btn-generate:active { transform: translateY(0); }
+
+    /* ===== AMIDA SCREEN ===== */
+    #amida-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .canvas-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      overflow-x: auto;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    #amida-canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    /* ===== CONTROL BUTTONS ===== */
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-start {
+      padding: 14px 44px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      letter-spacing: 0.06em;
+    }
+    .btn-start:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(245,87,108,0.5);
+    }
+    .btn-start:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-regen {
+      padding: 14px 24px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .btn-regen:hover { background: rgba(255,255,255,0.25); }
+
+    .btn-back {
+      padding: 14px 24px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-back:hover { color: white; border-color: rgba(255,255,255,0.6); }
+
+    /* ===== RESULTS ===== */
+    .results-card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 560px;
+      display: none;
+      animation: fadeUp 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #333;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .result-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .result-item:nth-child(1) { animation-delay: 0.05s; }
+    .result-item:nth-child(2) { animation-delay: 0.1s; }
+    .result-item:nth-child(3) { animation-delay: 0.15s; }
+    .result-item:nth-child(4) { animation-delay: 0.2s; }
+    .result-item:nth-child(5) { animation-delay: 0.25s; }
+    .result-item:nth-child(6) { animation-delay: 0.3s; }
+    .result-item:nth-child(7) { animation-delay: 0.35s; }
+    .result-item:nth-child(8) { animation-delay: 0.4s; }
+
+    .result-winner {
+      background: linear-gradient(135deg, #fff1f2, #fce7f3);
+      border: 2px solid #f5576c;
+    }
+    .result-loser {
+      background: #f8f9fa;
+      border: 2px solid #e2e8f0;
+    }
+
+    .result-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .result-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .result-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #222;
+    }
+    .result-badge {
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .badge-win {
+      background: linear-gradient(135deg, #f5576c, #f093fb);
+      color: white;
+    }
+    .badge-lose {
+      background: #e2e8f0;
+      color: #999;
+    }
+
+    /* ===== CONFETTI ===== */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-title">🎯 あみだくじ</div>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div class="card" id="setup-screen">
+  <div class="card-title">👥 参加者の名前を入力</div>
+  <div id="name-inputs"></div>
+  <button class="btn-add" onclick="addName()">＋ 名前を追加</button>
+
+  <div class="card-title">🎊 当たりの数を設定</div>
+  <div class="winners-section">
+    <span class="winners-label">当たりの人数</span>
+    <div class="qty-control">
+      <button class="qty-btn" onclick="changeWinners(-1)">−</button>
+      <span class="qty-display" id="winners-display">1</span>
+      <button class="qty-btn" onclick="changeWinners(+1)">＋</button>
+    </div>
+    <span class="winners-label">人</span>
+  </div>
+
+  <button class="btn-generate" onclick="generate()">あみだくじを生成！🎲</button>
+</div>
+
+<!-- ===== AMIDA SCREEN ===== -->
+<div id="amida-screen">
+  <div class="canvas-card">
+    <canvas id="amida-canvas"></canvas>
+  </div>
+  <div class="controls">
+    <button class="btn-start" id="start-btn" onclick="startAnimation()">🎯 スタート！</button>
+    <button class="btn-regen" onclick="regenerate()">🔀 再生成</button>
+    <button class="btn-back" onclick="backToSetup()">← 設定に戻る</button>
+  </div>
+  <div class="results-card" id="results-card">
+    <div class="results-title">🎊 結果発表！</div>
+    <div id="results-list"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  定数・カラーパレット
+// ============================================================
+const NUM_LEVELS = 15;
+const MARGIN_TOP = 64;
+const MARGIN_BOTTOM = 64;
+const MARGIN_SIDE = 48;
+const BAR_PROB = 0.42;
+
+const COLORS = [
+  '#E74C3C','#3498DB','#2ECC71','#F39C12','#9B59B6',
+  '#1ABC9C','#E67E22','#E91E63','#00BCD4','#8BC34A',
+  '#FF5722','#795548','#009688','#673AB7','#607D8B'
+];
+
+// ============================================================
+//  状態
+// ============================================================
+let names = ['Aさん','Bさん','Cさん'];
+let numWinners = 1;
+let bars = [];          // bars[level][col]
+let paths = [];         // paths[i] = [col at each level]
+let bottomLabels = [];  // 当たり or ハズレ
+let animStep = 0;
+let animTimer = null;
+let isAnimating = false;
+let isDone = false;
+let nameCount = 3;
+
+// ============================================================
+//  初期化：名前フィールド描画
+// ============================================================
+function initNameInputs() {
+  const container = document.getElementById('name-inputs');
+  container.innerHTML = '';
+  names.forEach((n, i) => {
+    appendNameRow(n, i);
+  });
+}
+
+function appendNameRow(value, idx) {
+  const container = document.getElementById('name-inputs');
+  const row = document.createElement('div');
+  row.className = 'name-row';
+  row.innerHTML = `
+    <div class="name-color-dot" style="background:${COLORS[idx % COLORS.length]};"></div>
+    <input type="text" class="name-input" placeholder="名前 ${idx+1}" value="${value}">
+    <button class="btn-remove" onclick="removeName(this)">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function addName() {
+  const rows = document.querySelectorAll('.name-row');
+  if (rows.length >= 15) { alert('最大15人まで登録できます'); return; }
+  nameCount++;
+  const idx = rows.length;
+  appendNameRow('', idx);
+  // dot colorの再割り当て
+  refreshDotColors();
+}
+
+function removeName(btn) {
+  const rows = document.querySelectorAll('.name-row');
+  if (rows.length <= 2) { alert('最低2人必要です'); return; }
+  btn.parentElement.remove();
+  refreshDotColors();
+}
+
+function refreshDotColors() {
+  document.querySelectorAll('.name-row').forEach((row, i) => {
+    row.querySelector('.name-color-dot').style.background = COLORS[i % COLORS.length];
+  });
+}
+
+function getNames() {
+  return Array.from(document.querySelectorAll('.name-input'))
+    .map(el => el.value.trim())
+    .filter(Boolean);
+}
+
+// ============================================================
+//  当たり数コントロール
+// ============================================================
+function changeWinners(delta) {
+  const maxWinners = Math.max(1, getNames().length - 1 || 14);
+  numWinners = Math.max(1, Math.min(numWinners + delta, maxWinners));
+  document.getElementById('winners-display').textContent = numWinners;
+}
+
+// ============================================================
+//  あみだ生成
+// ============================================================
+function generate() {
+  names = getNames();
+  if (names.length < 2) { alert('2人以上の名前を入力してください'); return; }
+  numWinners = Math.max(1, Math.min(numWinners, names.length - 1));
+
+  const n = names.length;
+
+  // バー生成
+  bars = [];
+  for (let lv = 0; lv < NUM_LEVELS; lv++) {
+    bars[lv] = new Array(n - 1).fill(false);
+    for (let col = 0; col < n - 1; col++) {
+      if (col > 0 && bars[lv][col - 1]) continue;
+      bars[lv][col] = Math.random() < BAR_PROB;
+    }
+  }
+
+  // パス追跡
+  paths = Array.from({length: n}, (_, i) => tracePath(i));
+
+  // 下ラベル割り当て
+  bottomLabels = new Array(n).fill('ハズレ');
+  const shuffled = Array.from({length: n}, (_, i) => i).sort(() => Math.random() - 0.5);
+  for (let i = 0; i < numWinners; i++) bottomLabels[shuffled[i]] = '当たり！';
+
+  // 画面切り替え
+  document.getElementById('setup-screen').style.display = 'none';
+  const amidaScreen = document.getElementById('amida-screen');
+  amidaScreen.style.display = 'flex';
+  document.getElementById('results-card').style.display = 'none';
+  document.getElementById('start-btn').disabled = false;
+
+  animStep = 0;
+  isDone = false;
+  isAnimating = false;
+
+  setupCanvas();
+  redraw(0, false);
+}
+
+function regenerate() {
+  if (animTimer) clearTimeout(animTimer);
+  generate();
+}
+
+function backToSetup() {
+  if (animTimer) clearTimeout(animTimer);
+  document.getElementById('amida-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+}
+
+function tracePath(startCol) {
+  const path = [startCol];
+  let col = startCol;
+  for (let lv = 0; lv < NUM_LEVELS; lv++) {
+    if (col < bars[lv].length && bars[lv][col]) col++;
+    else if (col > 0 && bars[lv][col - 1]) col--;
+    path.push(col);
+  }
+  return path;
+}
+
+// ============================================================
+//  Canvas セットアップ
+// ============================================================
+let canvas, ctx, lineSpacing, levelSpacing, CW, CH;
+
+function setupCanvas() {
+  canvas = document.getElementById('amida-canvas');
+  ctx = canvas.getContext('2d');
+
+  const n = names.length;
+  const containerW = document.querySelector('.canvas-card').clientWidth - 40;
+  lineSpacing = Math.max(55, Math.min(110, (containerW - MARGIN_SIDE * 2) / Math.max(n - 1, 1)));
+  CW = MARGIN_SIDE * 2 + lineSpacing * (n - 1);
+  CH = MARGIN_TOP + MARGIN_BOTTOM + 500;
+  levelSpacing = 500 / NUM_LEVELS;
+
+  canvas.width = CW;
+  canvas.height = CH;
+}
+
+function lineX(col) { return MARGIN_SIDE + col * lineSpacing; }
+function levelY(lv) { return MARGIN_TOP + lv * levelSpacing; }
+
+// ============================================================
+//  描画
+// ============================================================
+function redraw(step, showPaths) {
+  const n = names.length;
+  ctx.clearRect(0, 0, CW, CH);
+
+  // 背景
+  ctx.fillStyle = '#FCFCFD';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // ===== 縦線（グレー） =====
+  ctx.strokeStyle = '#D1D5DB';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([]);
+  for (let col = 0; col < n; col++) {
+    const x = lineX(col);
+    ctx.beginPath();
+    ctx.moveTo(x, levelY(0));
+    ctx.lineTo(x, levelY(NUM_LEVELS));
+    ctx.stroke();
+  }
+
+  // ===== 横棒（グレー） =====
+  ctx.strokeStyle = '#D1D5DB';
+  ctx.lineWidth = 2.5;
+  for (let lv = 0; lv < NUM_LEVELS; lv++) {
+    for (let col = 0; col < n - 1; col++) {
+      if (bars[lv][col]) {
+        const y = levelY(lv) + levelSpacing * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(lineX(col), y);
+        ctx.lineTo(lineX(col + 1), y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ===== パス描画 =====
+  if (showPaths && step > 0) {
+    for (let p = 0; p < n; p++) {
+      drawPath(p, step);
+    }
+  }
+
+  // ===== 名前ラベル（上） =====
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let col = 0; col < n; col++) {
+    const x = lineX(col);
+    const name = names[col];
+    const color = COLORS[col % COLORS.length];
+    const tw = ctx.measureText(name).width;
+    const bw = tw + 20;
+    const bh = 26;
+    const bx = x - bw / 2;
+    const by = MARGIN_TOP - 40;
+
+    // 影
+    ctx.shadowColor = 'rgba(0,0,0,0.12)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
+
+    // ピル背景
+    ctx.fillStyle = showPaths ? color : '#5B6CF6';
+    pill(ctx, bx, by, bw, bh, 8);
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.fillStyle = 'white';
+    ctx.fillText(name, x, by + bh / 2);
+  }
+
+  // ===== 下ラベル =====
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const bottomY = levelY(NUM_LEVELS) + 12;
+  for (let col = 0; col < n; col++) {
+    const x = lineX(col);
+    const label = isDone ? bottomLabels[col] : '？';
+    const isWin = bottomLabels[col] === '当たり！';
+    const tw = ctx.measureText(label).width;
+    const bw = Math.max(tw + 20, 42);
+    const bh = 26;
+
+    if (isDone && isWin) {
+      ctx.fillStyle = '#f5576c';
+    } else if (isDone) {
+      ctx.fillStyle = '#9CA3AF';
+    } else {
+      ctx.fillStyle = '#C4C9D4';
+    }
+
+    pill(ctx, x - bw / 2, bottomY, bw, bh, 8);
+    ctx.fill();
+
+    ctx.fillStyle = 'white';
+    ctx.fillText(label, x, bottomY + bh / 2);
+  }
+}
+
+// 丸角矩形
+function pill(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawPath(p, step) {
+  const color = COLORS[p % COLORS.length];
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+
+  const maxStep = Math.min(step, NUM_LEVELS);
+
+  ctx.beginPath();
+  ctx.moveTo(lineX(paths[p][0]), levelY(0));
+
+  for (let s = 0; s < maxStep; s++) {
+    const curr = paths[p][s];
+    const next = paths[p][s + 1];
+    const yTop = levelY(s);
+    const yMid = levelY(s) + levelSpacing * 0.5;
+    const yBot = levelY(s + 1);
+
+    ctx.lineTo(lineX(curr), yMid);
+    if (curr !== next) ctx.lineTo(lineX(next), yMid);
+    ctx.lineTo(lineX(next), yBot);
+  }
+  ctx.stroke();
+
+  // 先端の丸いドット
+  const dotCol = paths[p][maxStep];
+  const dotY = levelY(maxStep);
+  ctx.fillStyle = color;
+  ctx.shadowColor = `${color}88`;
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(lineX(dotCol), dotY, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+}
+
+// ============================================================
+//  アニメーション
+// ============================================================
+function startAnimation() {
+  if (isAnimating || isDone) return;
+  isAnimating = true;
+  animStep = 0;
+  document.getElementById('start-btn').disabled = true;
+
+  function tick() {
+    animStep++;
+    redraw(animStep, true);
+    if (animStep <= NUM_LEVELS) {
+      animTimer = setTimeout(tick, 160);
+    } else {
+      isDone = true;
+      isAnimating = false;
+      redraw(NUM_LEVELS, true);
+      showResults();
+      launchConfetti();
+    }
+  }
+  tick();
+}
+
+// ============================================================
+//  結果表示
+// ============================================================
+function showResults() {
+  const card = document.getElementById('results-card');
+  const list = document.getElementById('results-list');
+  list.innerHTML = '';
+
+  const items = names.map((name, i) => ({
+    name,
+    color: COLORS[i % COLORS.length],
+    isWin: bottomLabels[paths[i][NUM_LEVELS]] === '当たり！'
+  }));
+  // 当たり先頭
+  items.sort((a, b) => b.isWin - a.isWin);
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = `result-item ${item.isWin ? 'result-winner' : 'result-loser'}`;
+    div.innerHTML = `
+      <div class="result-left">
+        <div class="result-dot" style="background:${item.color};"></div>
+        <span class="result-name">${escapeHtml(item.name)}</span>
+      </div>
+      <span class="result-badge ${item.isWin ? 'badge-win' : 'badge-lose'}">
+        ${item.isWin ? '🎊 当たり！' : 'ハズレ'}
+      </span>
+    `;
+    list.appendChild(div);
+  });
+
+  card.style.display = 'block';
+  setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+//  紙吹雪エフェクト
+// ============================================================
+function launchConfetti() {
+  const confettiColors = ['#f5576c','#f093fb','#667eea','#4ade80','#facc15','#60a5fa'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => spawnPiece(confettiColors), i * 30);
+  }
+}
+
+function spawnPiece(colors) {
+  const el = document.createElement('div');
+  el.className = 'confetti-piece';
+  el.style.left = Math.random() * 100 + 'vw';
+  el.style.background = colors[Math.floor(Math.random() * colors.length)];
+  el.style.width = (8 + Math.random() * 8) + 'px';
+  el.style.height = (8 + Math.random() * 8) + 'px';
+  el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+  document.body.appendChild(el);
+
+  const duration = 1800 + Math.random() * 1200;
+  const drift = (Math.random() - 0.5) * 200;
+
+  el.animate([
+    { top: '-10px', opacity: 1, transform: `translateX(0) rotate(0deg)` },
+    { top: '100vh', opacity: 0, transform: `translateX(${drift}px) rotate(${Math.random()*720}deg)` }
+  ], { duration, easing: 'cubic-bezier(.25,.46,.45,.94)', fill: 'forwards' }).onfinish = () => el.remove();
+}
+
+// ============================================================
+//  起動
+// ============================================================
+initNameInputs();
+</script>
+</body>
+</html>
